@@ -31,10 +31,10 @@
 ## Fase 1 — Profiling de datos
 > El profiling exploratorio ya se hizo y sus conclusiones están en `spec.md §2`, FR-07 y §7. Las tareas de esta fase lo dejan reproducible y documentado en el repo.
 
-- [~] **T1.1** Script de profiling (`etl/src/profiling/profile.py`): por CSV → encoding/BOM, columnas, nulos, duplicados, min/max, valores distintos de categóricas, y cruces de claves (viajes↔estaciones, viajes↔usuarios, estaciones↔comunas).
+- [x] **T1.1** Script de profiling (`etl/src/profiling/profile.py`): por CSV → encoding/BOM, columnas, nulos, duplicados, min/max, valores distintos de categóricas, y cruces de claves (viajes↔estaciones, viajes↔usuarios, estaciones↔comunas).
   - Aceptación: corre local y genera un reporte en `docs/profiling/` con los mismos números que `spec.md §2`.
   - Commit: `feat(profiling): add dataset profiling script`
-- [ ] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.
+- [~] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.
   - Aceptación: todas las columnas documentadas y consistentes con FR-04/FR-07.
   - Commit: `docs: add data dictionary`
 - [ ] **T1.3** ADRs: `docs/adr/001-comuna-assignment.md` (PostGIS + respaldo por cercanía), `002-station-catalog.md` (actual vs viejo), `003-users-coverage.md` (altas 2024 + 2025, 49 % de cobertura, `has_profile`). El GeoJSON ya está en `data/reference/`.

@@ -15,7 +15,7 @@
 **No incluye**: ingesta incremental/streaming, scheduling, autenticación de usuarios finales, despliegue en la nube, usuarios dados de alta antes de 2024.
 
 ## 2. Datos de entrada
-Perfilados sobre los archivos completos con `uv run --project etl ecobici-profile`. Reporte completo en [`docs/profiling/profile.md`](../docs/profiling/profile.md); detalle por columna en `docs/data-dictionary.md`.
+Perfilados sobre los archivos completos con `uv run --project etl ecobici-profile`. Reporte completo en [`docs/profiling/profile.md`](../docs/profiling/profile.md); detalle por columna en [`docs/data-dictionary.md`](../docs/data-dictionary.md).
 
 | Archivo | Uso | Filas | Formato | Hallazgos |
 |---|---|---|---|---|
@@ -45,7 +45,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 
 ### Ingesta (bronze)
 - **FR-01** Leer los CSV de `data/raw/` y el GeoJSON de `data/reference/`, y cargarlos a tablas de `bronze` sin transformar valores (columnas TEXT; geometría como GeoJSON TEXT).
-- **FR-01b** Los nombres de columna se normalizan a snake_case ASCII (`ID Cliente` → `id_cliente`, `género` → `genero`, `Customer Has Dni (Yes / No)` → `customer_has_dni`); se quita el BOM. El mapeo nombre original → normalizado queda en `bronze._column_mapping`.
+- **FR-01b** Los nombres de columna se normalizan a snake_case ASCII (`ID Cliente` → `id_cliente`, `género` → `genero`, `Customer Has Dni (Yes / No)` → `customer_has_dni_yes_no`); se quita el BOM. El mapeo nombre original → normalizado queda en `bronze._column_mapping`.
 - **FR-01c** Cada archivo de usuarios se carga en su propia tabla bronze (`users_2024`, `users_2025`), respetando su esquema. La unificación es en silver: `id_cliente` / `id_usuario` → `user_id`; `has_dni` queda NULL para 2024; se agrega `signup_year`.
 - **FR-02** Cada fila de bronze guarda `_source_file`, `_row_number` y `_loaded_at`.
 - **FR-03** La ingesta es idempotente: re-ejecutarla con los mismos archivos no duplica filas (`bronze._ingestion_log` con el hash SHA-256 de cada archivo).
@@ -81,13 +81,13 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 - **FR-08** Las filas rechazadas se guardan en `silver.<entidad>_rejected` con `reject_reason`.
 
 ### Modelo analítico (gold)
-- **FR-09** Modelo estrella:
-  - `dim_station` (station_id, nombre, dirección, lat, long, geom, comuna, comuna_assignment, source)
-  - `dim_comuna` (comuna, barrios, área, geom)
-  - `dim_user` (user_id, has_profile, género, edad, rango_etario, fecha_alta, signup_year, cohorte_alta_mes, has_dni). Incluye **todos** los usuarios que aparecen en los viajes. Para los que no están en ninguno de los archivos de usuarios, `has_profile = false`, la edad y la fecha de alta quedan NULL y el género se toma del más frecuente en sus viajes.
-  - `dim_bike_model` (bike_model_id, modelo)
-  - `dim_date` (fecha, día de semana, mes, trimestre, fin de semana, feriado opcional)
-  - `fct_trips` (trip_id, timestamps de origen y destino, station_origin_id, station_destination_id, user_id, bike_model_id, duration_seconds, is_round_trip)
+- **FR-09** Modelo estrella. Desde silver, las columnas van en inglés snake_case (ver [diccionario de datos](../docs/data-dictionary.md)):
+  - `dim_station` (station_id, station_number, name, address, latitude, longitude, geom, comuna, comuna_assignment, source)
+  - `dim_comuna` (comuna, barrios, perimeter_m, area_m2, geom)
+  - `dim_user` (user_id, has_profile, gender, age, age_group, signed_up_at, signup_year, signup_month, has_dni). Incluye **todos** los usuarios que aparecen en los viajes. Para los que no están en ninguno de los archivos de usuarios, `has_profile = false`, la edad y la fecha de alta quedan NULL y el género se toma del más frecuente en sus viajes.
+  - `dim_bike_model` (bike_model_id, bike_model)
+  - `dim_date` (date, day_of_week, month, quarter, is_weekend, is_holiday opcional)
+  - `fct_trips` (trip_id, started_at, ended_at, origin_station_id, destination_station_id, user_id, bike_model_id, duration_seconds, is_round_trip)
 - **FR-10** `agg_station_od_monthly`: viajes y duración media por par origen→destino y mes.
 - **FR-11** Marts / consultas para cada pregunta del challenge:
 
