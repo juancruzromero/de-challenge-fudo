@@ -23,7 +23,7 @@ ignore = [
 "**/tests/**" = ["S101"] # assert en tests
 
 [lint.isort]
-known-first-party = ["ingest"]
+known-first-party = ["ingest", "profiling"]
 
 [format]
 quote-style = "double"

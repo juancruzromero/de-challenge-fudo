@@ -15,15 +15,15 @@
 **No incluye**: ingesta incremental/streaming, scheduling, autenticación de usuarios finales, despliegue en la nube, usuarios dados de alta antes de 2024.
 
 ## 2. Datos de entrada
-Perfilados sobre los archivos completos (detalle por columna en `docs/data-dictionary.md`).
+Perfilados sobre los archivos completos con `uv run --project etl ecobici-profile`. Reporte completo en [`docs/profiling/profile.md`](../docs/profiling/profile.md); detalle por columna en `docs/data-dictionary.md`.
 
 | Archivo | Uso | Filas | Formato | Hallazgos |
 |---|---|---|---|---|
 | `data/raw/ecobici-datasets-2025.csv` | Viajes 2025 | 3.156.182 | UTF-8 sin BOM, `,`, comillas `"` | 17 columnas; IDs con sufijo `BAEcobici`; columna `género` con tilde; duración con separador de miles en el 48% de las filas (`"3,108"`); 0 IDs de viaje duplicados. |
-| `data/raw/usuarios-ecobici-2025.csv` | Usuarios con alta en 2025 | 192.674 | UTF-8 sin BOM | Headers con espacios (`ID Cliente`, `Customer Has Dni (Yes / No)`); edades de -41 a 981 y valores no numéricos (`"2,024"`). |
+| `data/raw/usuarios-ecobici-2025.csv` | Usuarios con alta en 2025 | 192.674 | UTF-8 sin BOM | Headers con espacios (`ID Cliente`, `Customer Has Dni (Yes / No)`); edades de -41 a 2.025; 17 con separador de miles (`"2,024"`), que en realidad son años. |
 | `data/raw/usuarios-ecobici-2024.csv` | Usuarios con alta en 2024 | 197.077 | UTF-8 **con BOM** | Esquema distinto a 2025: `id_usuario` en vez de `ID Cliente` y **sin** columna de DNI; edades de 4 a 2021 (76 fuera de [15, 100]); sin vacíos ni IDs duplicados; ningún ID se repite con 2025. |
 | `data/raw/estaciones.csv` | Catálogo de estaciones (sistema actual) | 407 | UTF-8 **con BOM** | `barrio`, `comuna` y `emplazamiento` vacíos en todas las filas; `numero_de_estacion` con 9 repetidos (no es clave). |
-| `data/raw/estaciones-sistema-viejo.csv` | Catálogo del sistema anterior | 204 | UTF-8 | IDs `1.0`, `2.0`…; solo se carga en bronze por trazabilidad (ver FR-05b). |
+| `data/raw/estaciones-sistema-viejo.csv` | Catálogo del sistema anterior | 204 | UTF-8 | IDs `1.0`, `2.0`…; 4 IDs vacíos y 1 repetido; solo se carga en bronze por trazabilidad (ver FR-05b). |
 | `data/reference/comunas.geojson` | Polígonos de las 15 comunas (versionado) | 15 | GeoJSON, CRS84 (lon/lat) | Fuente: data.buenosaires.gob.ar. SHA-256 `c128dadf…de062e`. |
 
 `data/raw/ecobici-datasets-2025.zip` es una copia del CSV de viajes y **no se usa** en el pipeline.
@@ -58,7 +58,7 @@ Perfilados sobre los archivos completos (detalle por columna en `docs/data-dicti
   - Textos: trim, género en {`MALE`, `FEMALE`, `OTHER`, NULL}, modelo en {`FIT`, `ICONIC`}.
   - Coordenadas: `numeric` y punto PostGIS (SRID 4326).
 - **FR-05** **Estaciones**: la fuente es `estaciones.csv`. Las 6 estaciones que aparecen en los viajes y no están en el catálogo se completan con el nombre, la dirección y las coordenadas más frecuentes en los viajes, con `source = 'trips'`.
-- **FR-05b** El catálogo del sistema viejo **no se usa** para el modelo: 30 de sus 135 IDs compartidos corresponden a otra ubicación (por ejemplo, el id 131 es "Retiro III" en el viejo y "Hospital de Clínicas" en el actual, a 2,8 km).
+- **FR-05b** El catálogo del sistema viejo **no se usa** para el modelo: 26 de sus 135 IDs compartidos corresponden a otra ubicación a 200 m o más (por ejemplo, el id 131 es "Retiro III" en el viejo y "Hospital de Clínicas" en el actual, a 2,4 km; el 176 es "Pinzón" y "Parque Sarmiento I", a 15 km).
 - **FR-05c** **Comuna**: se asigna con PostGIS mediante `ST_Contains(comuna.geom, station.geom)`. Si una estación no cae en ningún polígono, se le asigna la comuna más cercana (`ST_Distance`) con `comuna_assignment = 'nearest'`. No se asigna barrio: el GeoJSON solo lista los barrios de cada comuna, sin sus polígonos.
 - **FR-06** Deduplicar viajes, usuarios y estaciones por su ID natural.
 - **FR-07** Reglas de calidad:
@@ -71,11 +71,12 @@ Perfilados sobre los archivos completos (detalle por columna en `docs/data-dicti
 | Viaje | fecha de destino < fecha de origen | rechazado (`destination_before_origin`) | 0 |
 | Viaje | sin ID de estación de origen o destino | rechazado (`missing_station`) | 1 |
 | Viaje | sin nombre o coordenadas de estación | se conserva; los atributos salen de `dim_station` | 18 orígenes / 29 destinos |
+| Viaje | coordenadas de estación en 0 (fuera de CABA) | se conserva; los atributos salen de `dim_station` | 176 destinos |
 | Viaje | misma estación de origen y destino | se conserva con `is_round_trip = true` | 275.733 |
 | Viaje | género vacío | género = NULL | 8.601 |
-| Usuario | edad no numérica o fuera de [15, 100] | edad = NULL (el usuario se conserva) | 2025: 83 fuera de rango + valores no numéricos · 2024: 76 |
+| Usuario | edad no numérica o fuera de [15, 100] | edad = NULL (el usuario se conserva) | 2025: 100 (5 menores de 15, 95 mayores de 100, de los cuales 17 con separador de miles) · 2024: 76 (6 + 70) |
 | Usuario | mismo ID en 2024 y 2025 | se conserva el alta más antigua | 0 |
-| Estación | nombre distinto para el mismo ID | se usa el nombre del catálogo | 10 IDs |
+| Estación | nombre distinto para el mismo ID | se usa el nombre del catálogo | 2 IDs (307, 449) |
 
 - **FR-08** Las filas rechazadas se guardan en `silver.<entidad>_rejected` con `reject_reason`.
 

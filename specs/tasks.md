@@ -31,7 +31,7 @@
 ## Fase 1 — Profiling de datos
 > El profiling exploratorio ya se hizo y sus conclusiones están en `spec.md §2`, FR-07 y §7. Las tareas de esta fase lo dejan reproducible y documentado en el repo.
 
-- [ ] **T1.1** Script de profiling (`etl/src/profiling/profile.py`): por CSV → encoding/BOM, columnas, nulos, duplicados, min/max, valores distintos de categóricas, y cruces de claves (viajes↔estaciones, viajes↔usuarios, estaciones↔comunas).
+- [~] **T1.1** Script de profiling (`etl/src/profiling/profile.py`): por CSV → encoding/BOM, columnas, nulos, duplicados, min/max, valores distintos de categóricas, y cruces de claves (viajes↔estaciones, viajes↔usuarios, estaciones↔comunas).
   - Aceptación: corre local y genera un reporte en `docs/profiling/` con los mismos números que `spec.md §2`.
   - Commit: `feat(profiling): add dataset profiling script`
 - [ ] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.

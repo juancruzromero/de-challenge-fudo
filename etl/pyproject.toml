@@ -16,12 +16,15 @@ dev = [
     "sqlfluff==4.4.0",
 ]
 
+[project.scripts]
+ecobici-profile = "profiling.profile:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ingest"]
+packages = ["src/ingest", "src/profiling"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
