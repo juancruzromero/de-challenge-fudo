@@ -16,14 +16,14 @@
 ---
 
 ## Fase 0 — SDD + bootstrap
-- [~] **T0.1** Documentos SDD (`specs/plan.md`, `specs/spec.md`, `specs/tasks.md`).
+- [x] **T0.1** Documentos SDD (`specs/plan.md`, `specs/spec.md`, `specs/tasks.md`).
   - Aceptación: los tres documentos revisados y aprobados.
   - Commit: `docs(specs): add plan, spec and tasks`
-- [~] **T0.2** Esqueleto del repo: `.gitignore` (`data/raw/*` salvo `.gitkeep`, `.env`, `target/`, `logs/`; `data/reference/` **sí** se versiona), `.env.example`, carpetas vacías con `.gitkeep`, `README.md` mínimo.
+- [x] **T0.2** Esqueleto del repo: `.gitignore` (`data/raw/*` salvo `.gitkeep`, `.env`, `target/`, `logs/`; `data/reference/` **sí** se versiona), `.env.example`, carpetas vacías con `.gitkeep`, `README.md` mínimo.
   - Aceptación: `git status` no muestra los CSV de `data/raw/` ni secretos; sí muestra `data/reference/comunas.geojson`.
   - Commit: `chore: bootstrap repository structure`
-- [ ] **T0.3** Tooling: `etl/pyproject.toml` (uv, ruff, pytest), `.sqlfluff`, `.pre-commit-config.yaml`.
-  - Aceptación: `pre-commit run --all-files` pasa.
+- [x] **T0.3** Tooling: `etl/pyproject.toml` (uv, dependencias y grupo dev con pytest, ruff, sqlfluff y pre-commit) + `uv.lock`, `ruff.toml` en la raíz (aplica a todo el Python del repo), `.sqlfluff` (postgres, templater jinja), `.pre-commit-config.yaml`.
+  - Aceptación: `uv run --project etl pytest` y `uv run --project etl pre-commit run --all-files` pasan.
   - Commit: `chore: add linting and pre-commit tooling`
 
 > Datos de entrada ya disponibles en `data/raw/` (CSV; el zip es una copia y no se usa) y `data/reference/comunas.geojson`.

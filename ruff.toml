@@ -1,0 +1,29 @@
+# Configuración de ruff para todo el Python del repo (etl/, metabase/, analytics/).
+target-version = "py312"
+line-length = 100
+extend-exclude = ["dbt/target", "dbt/dbt_packages"]
+
+[lint]
+select = [
+    "E",   # pycodestyle
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+    "N",   # pep8-naming
+    "S",   # flake8-bandit (seguridad)
+]
+ignore = [
+    "S608", # SQL armado con strings: los nombres de tabla se validan antes de usarse
+]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["S101"] # assert en tests
+
+[lint.isort]
+known-first-party = ["ingest"]
+
+[format]
+quote-style = "double"
