@@ -34,10 +34,10 @@
 - [x] **T1.1** Script de profiling (`etl/src/profiling/profile.py`): por CSV → encoding/BOM, columnas, nulos, duplicados, min/max, valores distintos de categóricas, y cruces de claves (viajes↔estaciones, viajes↔usuarios, estaciones↔comunas).
   - Aceptación: corre local y genera un reporte en `docs/profiling/` con los mismos números que `spec.md §2`.
   - Commit: `feat(profiling): add dataset profiling script`
-- [~] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.
+- [x] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.
   - Aceptación: todas las columnas documentadas y consistentes con FR-04/FR-07.
   - Commit: `docs: add data dictionary`
-- [ ] **T1.3** ADRs: `docs/adr/001-comuna-assignment.md` (PostGIS + respaldo por cercanía), `002-station-catalog.md` (actual vs viejo), `003-users-coverage.md` (altas 2024 + 2025, 49 % de cobertura, `has_profile`). El GeoJSON ya está en `data/reference/`.
+- [~] **T1.3** ADRs: `docs/adr/001-comuna-assignment.md` (PostGIS + respaldo por cercanía), `002-station-catalog.md` (actual vs viejo), `003-users-coverage.md` (altas 2024 + 2025, 49 % de cobertura, `has_profile`). El GeoJSON ya está en `data/reference/`.
   - Commit: `docs(adr): record data sourcing decisions`
 
 ## Fase 2 — Infra
@@ -66,7 +66,7 @@
 - [ ] **T4.1** Proyecto dbt: `dbt_project.yml`, `profiles.yml` por env, `packages.yml` (dbt_utils, dbt_expectations), `sources.yml` de bronze.
   - Commit: `feat(dbt): scaffold dbt project and bronze sources`
 - [ ] **T4.2** Silver de comunas (`ST_GeomFromGeoJSON`, índice GiST) y de estaciones: catálogo actual + 6 estaciones derivadas de viajes, comuna por `ST_Contains` con respaldo por cercanía. (FR-05, FR-05b, FR-05c)
-  - Aceptación: 413 estaciones (407 + 6), todas con comuna; AEROPARQUE con `comuna_assignment = 'nearest'`.
+  - Aceptación: 413 estaciones (407 + 6), todas con comuna; AEROPARQUE con `comuna_assignment = 'nearest'` y comuna 14 (ADR 001).
   - Commit: `feat(dbt): add silver comunas and stations with spatial join`
 - [ ] **T4.3** Silver de usuarios: unión de `users_2024` y `users_2025` con esquema común (FR-01c), rejected, edad inválida → NULL, `fecha_alta` + `hora_alta` → timestamp.
   - Aceptación: 389.751 usuarios (197.077 + 192.674), `signup_year` en {2024, 2025}.
