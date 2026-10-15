@@ -1,0 +1,47 @@
+# --- Datos de entrada (se descargan, ver README) ---
+data/raw/*
+!data/raw/.gitkeep
+# data/reference/ sí se versiona
+
+# --- Secretos ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- dbt ---
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# --- Logs y salidas locales ---
+logs/
+*.log
+
+# --- Volúmenes locales de Docker (si se usan bind mounts) ---
+.docker-data/
+
+# --- Editor y sistema operativo ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
