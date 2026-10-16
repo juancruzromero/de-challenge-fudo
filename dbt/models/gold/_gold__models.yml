@@ -259,3 +259,62 @@ models:
         description: Termina en la misma estación donde empezó.
         data_tests:
           - not_null
+
+  - name: agg_station_od_monthly
+    description: >
+      Viajes entre estaciones por mes (FR-10), con los atributos de origen y destino ya
+      resueltos. Es la fuente del dashboard de volumen entre estaciones.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [month_start, origin_station_id, destination_station_id]
+    columns:
+      - name: month_start
+        description: Primer día del mes.
+        data_tests:
+          - not_null
+      - name: year_month
+        description: Mes como YYYY-MM.
+      - name: origin_station_id
+        description: Estación de origen.
+        data_tests:
+          - not_null
+      - name: origin_station_name
+        description: Nombre de la estación de origen.
+      - name: origin_comuna
+        description: Comuna de origen (NULL para la estación sin ubicación).
+      - name: origin_comuna_label
+        description: Etiqueta de la comuna de origen.
+      - name: origin_latitude
+        description: Latitud de la estación de origen.
+      - name: origin_longitude
+        description: Longitud de la estación de origen.
+      - name: destination_station_id
+        description: Estación de destino.
+        data_tests:
+          - not_null
+      - name: destination_station_name
+        description: Nombre de la estación de destino.
+      - name: destination_comuna
+        description: Comuna de destino.
+      - name: destination_comuna_label
+        description: Etiqueta de la comuna de destino.
+      - name: destination_latitude
+        description: Latitud de la estación de destino.
+      - name: destination_longitude
+        description: Longitud de la estación de destino.
+      - name: is_round_trip
+        description: Origen y destino son la misma estación.
+      - name: trips
+        description: Cantidad de viajes del par en el mes.
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+      - name: avg_duration_minutes
+        description: Duración media en minutos.
+      - name: median_duration_minutes
+        description: Duración mediana en minutos (menos sensible a viajes muy largos).
+      - name: distance_m
+        description: Distancia en línea recta entre las dos estaciones, en metros.

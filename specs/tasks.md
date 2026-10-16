@@ -79,9 +79,9 @@
 ## Fase 5 — Gold (dbt) + análisis
 - [x] **T5.1** Dimensiones: `dim_station` (413), `dim_comuna` (15), `dim_user` (487.262: usuarios de los viajes + de los archivos de alta, con `has_profile`), `dim_bike_model` (2), `dim_date` (732 días). (FR-09)
   - Commit: `feat(dbt): add gold dimensions`
-- [~] **T5.2** `fct_trips` (3.155.783 viajes, con `start_date`, `start_hour`, `duration_minutes` y `distance_m` entre estaciones) + tests de relaciones con las 4 dimensiones.
+- [x] **T5.2** `fct_trips` (3.155.783 viajes, con `start_date`, `start_hour`, `duration_minutes` y `distance_m` entre estaciones) + tests de relaciones con las 4 dimensiones.
   - Commit: `feat(dbt): add trips fact table`
-- [ ] **T5.3** `agg_station_od_monthly` (FR-10).
+- [~] **T5.3** `agg_station_od_monthly` (FR-10): 535.947 filas mes × origen × destino, con nombres, comunas y coordenadas de las dos estaciones; suma exacta contra `fct_trips` por mes.
   - Commit: `feat(dbt): add monthly origin-destination aggregate`
 - [ ] **T5.4** Marts Q1–Q6 en gold (FR-11).
   - Commit: `feat(dbt): add analytical marts for challenge questions`
