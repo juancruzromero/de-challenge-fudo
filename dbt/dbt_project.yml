@@ -19,12 +19,25 @@ models:
     staging:
       +schema: silver
       +materialized: view
+    # vacuum analyze después de crear cada tabla (T6.2, sql/optimization/README.md). dbt no lo
+    # hace y hasta que pasa el autovacuum (que nunca toca las tablas chicas) la tabla queda:
+    # - sin estadísticas: el planner estima a ciegas;
+    # - sin visibility map: no hay index-only scans y cada lectura termina de setear hint bits.
+    # VACUUM no puede correr dentro de una transacción: va con transaction: false.
+    # parallel 0: el vacuum paralelo de índices pide memoria compartida (/dev/shm, 64 MB en
+    # Docker) y fallaba en fct_trips; en una tabla recién creada no hay nada que limpiar.
     silver:
       +schema: silver
       +materialized: table
+      +post-hook:
+        - sql: "vacuum (analyze, parallel 0) {{ this }}"
+          transaction: false
     gold:
       +schema: gold
       +materialized: table
+      +post-hook:
+        - sql: "vacuum (analyze, parallel 0) {{ this }}"
+          transaction: false
 
 seeds:
   ecobici:
