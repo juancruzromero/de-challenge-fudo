@@ -133,13 +133,15 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
   - Se documenta que son correlaciones, no causalidad.
 
 ## 6. Criterios de aceptación globales
-- [ ] `make reset && make up` termina sin errores y es reproducible.
-- [ ] `count(bronze) = count(silver) + count(rejected)` por entidad.
-- [ ] `dbt build` sin tests fallidos.
-- [ ] Todas las estaciones de `dim_station` tienen comuna.
-- [ ] `sql/analysis/q1..q6` devuelven resultados coherentes.
-- [ ] Dashboard accesible en `http://localhost:3000` sin configuración manual.
-- [ ] README explica cómo correr, probar, las decisiones tomadas y las limitaciones de los datos.
+Verificados en T8.2 sobre un clon limpio del repo, con volúmenes nuevos y sin `.env`.
+
+- [x] `make reset && make up` termina sin errores y es reproducible: 3 min la primera vez; la segunda corrida saltea la ingesta de los archivos sin cambios.
+- [x] `count(bronze) = count(silver) + count(rejected)` por entidad: diferencia 0 en viajes, usuarios, estaciones y comunas.
+- [x] `dbt build` sin tests fallidos: 175 OK y 1 warning esperado (8 viajes de duración 0, que se conservan).
+- [x] Todas las estaciones de `dim_station` con ubicación tienen comuna: 412 de 413. La 510 "[Valet] Galpón" no tiene coordenadas y queda con `comuna_assignment = 'unknown'` (ADR 002).
+- [x] `sql/analysis/q1..q6` devuelven resultados coherentes, coinciden con los marts.
+- [x] Dashboard accesible en `http://localhost:3000` sin configuración manual: las 16 preguntas responden.
+- [x] README explica cómo correr, probar, las decisiones tomadas y las limitaciones de los datos.
 
 ## 7. Decisiones sobre los datos
 | Pregunta | Decisión |

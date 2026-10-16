@@ -107,9 +107,10 @@
   - Commit: `feat(metabase): provision trips dashboard`
 
 ## Fase 8 — README y entrega
-- [~] **T8.1** README: requisitos, `make up`, arquitectura, modelo, decisiones/trade-offs, cómo probar, capturas, próximos pasos.
+- [x] **T8.1** README: requisitos, `make up`, arquitectura, modelo, decisiones/trade-offs, cómo probar, capturas, próximos pasos.
   - Commit: `docs: complete README`
-- [ ] **T8.2** Validación final en clon limpio (`make reset && make up`) contra criterios de `spec.md §6`.
+- [x] **T8.2** Validación final en clon limpio (`make reset && make up`) contra criterios de `spec.md §6`.
+  - Hecho: clon limpio desde GitHub, sin `.env`. `make up` en 3 min y segundo `make up` idempotente; reconciliación en 0; dbt 175 OK + 1 warn; `make sql`, `make test` (93) y `make lint` OK; 16 preguntas del dashboard OK. Arreglado: el mensaje final de `make up` mostraba el usuario vacío en la primera corrida. Ajustado el criterio de estaciones con comuna (la 510 no tiene ubicación).
   - Commit: `chore: final validation fixes` (si aplica)
 
 ## Fase 9 — Opcional: big data y análisis avanzado
