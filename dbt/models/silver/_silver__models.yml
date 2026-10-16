@@ -280,3 +280,24 @@ models:
         description: Archivo de origen.
       - name: source_row_number
         description: Fila en el archivo de origen (bronze._row_number).
+
+  - name: reconciliation
+    description: >
+      Control de calidad: filas por entidad en bronze, silver y rechazados. difference tiene
+      que ser 0 (test assert_silver_reconciles_with_bronze).
+    columns:
+      - name: entity
+        description: trips, users, stations (solo las del catálogo) o comunas.
+        data_tests:
+          - unique
+          - not_null
+      - name: bronze_rows
+        description: Filas en bronze.
+      - name: silver_rows
+        description: Filas válidas en silver.
+      - name: rejected_rows
+        description: Filas en la tabla *_rejected de la entidad.
+      - name: difference
+        description: bronze_rows - silver_rows - rejected_rows.
+      - name: rejected_pct
+        description: Porcentaje de filas de bronze rechazadas.

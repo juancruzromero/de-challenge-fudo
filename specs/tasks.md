@@ -71,9 +71,9 @@
 - [x] **T4.3** Silver de usuarios: unión de `users_2024` y `users_2025` con esquema común (FR-01c), rejected, edad inválida → NULL, `fecha_alta` + `hora_alta` → timestamp.
   - Aceptación: 389.751 usuarios (197.077 + 192.674), `signup_year` en {2024, 2025}.
   - Commit: `feat(dbt): add silver users`
-- [~] **T4.4** Silver de viajes con reglas FR-07 y rejected (FR-08): 3.155.783 válidos + 399 rechazados; test warn para los 8 viajes con fin = inicio.
+- [x] **T4.4** Silver de viajes con reglas FR-07 y rejected (FR-08): 3.155.783 válidos + 399 rechazados; test warn para los 8 viajes con fin = inicio.
   - Commit: `feat(dbt): add silver trips with quality rules`
-- [ ] **T4.5** Tests dbt de silver + test de reconciliación bronze = silver + rejected.
+- [~] **T4.5** Tests dbt de silver + reconciliación bronze = silver + rejected (`silver.reconciliation` + test `assert_silver_reconciles_with_bronze`).
   - Commit: `test(dbt): add silver data quality tests`
 
 ## Fase 5 — Gold (dbt) + análisis

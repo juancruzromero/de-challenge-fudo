@@ -64,6 +64,7 @@ Metabase (dashboard provisionado por API)   ·   sql/analysis/*.sql
 - **Catálogo de estaciones actual**: `estaciones.csv` cruza con el 99,8 % de los viajes; el del sistema viejo reutiliza IDs para otras ubicaciones, así que solo queda en bronze.
 - **Comuna con PostGIS**: `ST_Contains` contra los polígonos oficiales, con la comuna más cercana como respaldo (AEROPARQUE). El GeoJSON se versiona en `data/reference/` para que el pipeline no dependa de internet.
 - **Usuarios sin perfil incluidos**: `dim_user` tiene a todos los usuarios de los viajes, con `has_profile` para distinguir a los que tienen edad y fecha de alta (altas 2024 y 2025, 49 % de los viajes). Así las FKs se mantienen y la limitación queda explícita en Q3/Q4.
+- **Vistas solo sobre bronze; silver y gold como tablas**: en Postgres, al reconstruir una tabla dbt hace `drop ... cascade` y se lleva las vistas que dependen de ella. Las vistas de staging dependen de bronze, que la ingesta vacía con `truncate` (no `drop`), así que no se rompen; todo lo demás se materializa como tabla.
 - **Gold orientado a consumo**: el dashboard lee de agregados (`agg_station_od_monthly`), no de la tabla de hechos completa.
 - **ML desacoplado de la visualización**: Metabase no ejecuta Python; los modelos de scikit-learn escriben predicciones, coeficientes y métricas en tablas `gold.ml_*` que Metabase grafica como cualquier otra tabla.
 - **Credenciales por `.env`** (con `.env.example` versionado), nunca hardcodeadas.
