@@ -95,3 +95,76 @@ models:
           - accepted_values:
               arguments:
                 values: [catalog, trips]
+
+  - name: users
+    description: >
+      Usuarios con alta en 2024 y 2025 unificados en un esquema común (FR-01c, ADR 003).
+      Cubren el 49 % de los viajes; el resto son altas anteriores a 2024.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "extract(year from signed_up_at) = signup_year"
+      - dbt_utils.expression_is_true:
+          arguments:
+            # El archivo 2024 no trae DNI; el 2025 siempre lo trae.
+            expression: "(signup_year = 2024) = (has_dni is null)"
+    columns:
+      - name: user_id
+        description: ID del usuario (el de los viajes, sin el sufijo BAEcobici).
+        data_tests:
+          - unique
+          - not_null
+      - name: gender
+        description: MALE, FEMALE u OTHER según el archivo de usuarios.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [MALE, FEMALE, OTHER]
+      - name: age
+        description: >
+          Edad declarada al alta. NULL si estaba fuera de [15, 100] o no era un entero
+          (incluye años cargados como edad, por ejemplo "2,024").
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 15
+                max_value: 100
+              config:
+                where: "age is not null"
+      - name: signed_up_at
+        description: Fecha y hora de alta (hora local de Buenos Aires).
+        data_tests:
+          - not_null
+      - name: signup_date
+        description: Fecha de alta.
+        data_tests:
+          - not_null
+      - name: signup_year
+        description: Año del archivo de origen (2024 o 2025).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2024, 2025]
+                quote: false
+      - name: has_dni
+        description: Si el usuario registró DNI. NULL para las altas 2024 (el archivo no lo trae).
+      - name: source_file
+        description: Archivo de origen.
+
+  - name: users_rejected
+    description: >
+      Filas de los archivos de usuarios descartadas (FR-08), con el motivo y la fila de origen
+      en bronze.
+    columns:
+      - name: reject_reason
+        description: invalid_user_id, invalid_signup_date o duplicate_user_id.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [invalid_user_id, invalid_signup_date, duplicate_user_id]
+      - name: source_file
+        description: Archivo de origen.
+      - name: source_row_number
+        description: Fila en el archivo de origen (bronze._row_number).

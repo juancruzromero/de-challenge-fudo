@@ -27,6 +27,30 @@
     nullif(trim({{ column }}), '')
 {%- endmacro %}
 
+{#- MALE, FEMALE u OTHER (sin importar mayúsculas); cualquier otro valor o vacío -> NULL. -#}
+{% macro clean_gender(column) -%}
+    case
+        when upper(trim({{ column }})) in ('MALE', 'FEMALE', 'OTHER')
+            then upper(trim({{ column }}))
+    end
+{%- endmacro %}
+
+{#- `YYYY-MM-DD` + `HH:MM:SS` (o un único `YYYY-MM-DD HH:MM:SS`) -> timestamp; si el formato
+    no coincide -> NULL. Sin zona horaria: hora local de Buenos Aires, como en el origen. -#}
+{% macro clean_timestamp(date_column, time_column=none) -%}
+    {%- set value -%}
+        {%- if time_column -%}
+            trim({{ date_column }}) || ' ' || trim({{ time_column }})
+        {%- else -%}
+            trim({{ date_column }})
+        {%- endif -%}
+    {%- endset -%}
+    case
+        when {{ value }} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'
+            then ({{ value }})::timestamp
+    end
+{%- endmacro %}
+
 {#- Coordenada dentro de la caja de CABA (dbt_project.yml, vars.caba_bbox); si no, NULL. -#}
 {% macro clean_latitude(column) -%}
     {%- set bbox = var('caba_bbox') -%}

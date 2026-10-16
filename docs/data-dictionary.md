@@ -52,7 +52,9 @@ Cada columna de cada archivo de entrada: cómo se llama en el origen, en **bronz
 
 ## 👤 Usuarios
 
-Dos archivos con esquemas distintos que se cargan por separado en bronze (FR-01c) y se unen en `silver.users`.
+Dos archivos con esquemas distintos que se cargan por separado en bronze (FR-01c) y se unen en `silver.users` (389.751 usuarios). Además de las columnas de las tablas de abajo, `silver.users` tiene `signup_date` (fecha de `signed_up_at`) y `source_file`.
+
+Una fila va a `silver.users_rejected` con su `reject_reason` si: el ID no es un entero (`invalid_user_id`), la fecha y hora de alta no tienen el formato esperado (`invalid_signup_date`), o el ID ya apareció con un alta más antigua (`duplicate_user_id`). Hoy no hay ninguna.
 
 ### Altas 2025
 
