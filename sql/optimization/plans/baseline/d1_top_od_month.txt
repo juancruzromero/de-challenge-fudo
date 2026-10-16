@@ -1,0 +1,27 @@
+-- sql/optimization/dashboard.sql: Consultas representativas del dashboard de Metabase (T7.2), para medir con make bench.
+
+select
+    origin_station_name,
+    destination_station_name,
+    trips,
+    median_duration_minutes
+from gold.agg_station_od_monthly
+where month_start = date '2025-03-01'
+order by trips desc
+limit 20;
+
+Limit  (cost=16252.72..16252.77 rows=20 width=42) (actual time=12.332..12.335 rows=20 loops=1)
+  Buffers: shared hit=1395
+  ->  Sort  (cost=16252.72..16377.15 rows=49772 width=42) (actual time=12.332..12.333 rows=20 loops=1)
+        Sort Key: trips DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=1395
+        ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=1378.16..14928.31 rows=49772 width=42) (actual time=1.060..7.910 rows=47953 loops=1)
+              Recheck Cond: (month_start = '2025-03-01'::date)
+              Heap Blocks: exact=1156
+              Buffers: shared hit=1395
+              ->  Bitmap Index Scan on e3d131fb6745dd758cf0d3dac0d72446  (cost=0.00..1365.71 rows=49772 width=0) (actual time=0.977..0.977 rows=47953 loops=1)
+                    Index Cond: (month_start = '2025-03-01'::date)
+                    Buffers: shared hit=239
+Planning Time: 0.041 ms
+Execution Time: 12.343 ms

@@ -9,12 +9,12 @@ UV      := uv run --project etl
 export
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down reset ps logs psql etl dbt docs sql setup test lint profile
+.PHONY: help env up down reset ps logs psql etl dbt docs sql setup test lint profile bench
 
 help: ## Lista los comandos disponibles
 	@echo "Uso: make <comando>"
 	@echo
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
+	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
 # --- Stack ----------------------------------------------------------------------------------
@@ -97,3 +97,24 @@ lint: ## Corre todos los hooks de pre-commit (ruff, sqlfluff, ...)
 
 profile: ## Regenera docs/profiling/profile.md desde data/raw/
 	$(UV) ecobici-profile
+
+# Corre dbt run para tomar los tiempos por modelo y después mide las consultas como bi_reader.
+# El build va aparte: `run --build` escribe el log del build en stdout y ensucia el JSON.
+# skip_dbt=1 mide solo las consultas; only=d1 filtra por prefijo del nombre.
+bench: env ## Mide consultas y build de dbt en sql/optimization/ (label=x, baseline=y compara)
+	@[ -n "$(label)" ] || { echo "Uso: make bench label=baseline [baseline=...] [skip_dbt=1]"; exit 1; }
+	$(call require_service,etl,T3.4)
+	@tmp=$$(mktemp) && status=0 && \
+	if [ "$(skip_dbt)" != "1" ]; then \
+		$(COMPOSE) build -q etl && \
+		echo "dbt run para medir los modelos..." && \
+		$(COMPOSE) run --rm -T etl \
+			sh -c 'dbt run -q > /dev/null && cat dbt/target/run_results.json' > $$tmp \
+			|| status=$$?; \
+	fi && \
+	if [ $$status -eq 0 ]; then \
+		$(UV) ecobici-benchmark --label "$(label)" \
+			$(if $(baseline),--baseline "$(baseline)") $(if $(only),--only "$(only)") \
+			$(if $(filter 1,$(skip_dbt)),,--dbt-results $$tmp) || status=$$?; \
+	fi; \
+	rm -f $$tmp; exit $$status

@@ -22,13 +22,14 @@ dev = [
 [project.scripts]
 ecobici-ingest = "ingest.cli:main"
 ecobici-profile = "profiling.profile:main"
+ecobici-benchmark = "benchmark.benchmark:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ingest", "src/profiling"]
+packages = ["src/ingest", "src/profiling", "src/benchmark"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

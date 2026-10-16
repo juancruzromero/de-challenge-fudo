@@ -1,0 +1,34 @@
+-- sql/optimization/dashboard.sql: Matriz comuna de origen × comuna de destino en el año.
+
+select
+    origin_comuna_label,
+    destination_comuna_label,
+    sum(trips) as trips
+from gold.agg_station_od_monthly
+group by origin_comuna_label, destination_comuna_label;
+
+Finalize GroupAggregate  (cost=17848.46..17912.26 rows=240 width=50) (actual time=63.056..65.292 rows=239 loops=1)
+  Group Key: origin_comuna_label, destination_comuna_label
+  Buffers: shared hit=5226 read=7718
+  ->  Gather Merge  (cost=17848.46..17904.46 rows=480 width=50) (actual time=63.047..65.125 rows=711 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=5226 read=7718
+        ->  Sort  (cost=16848.43..16849.03 rows=240 width=50) (actual time=56.623..56.632 rows=237 loops=3)
+              Sort Key: origin_comuna_label, destination_comuna_label
+              Sort Method: quicksort  Memory: 41kB
+              Buffers: shared hit=5226 read=7718
+              Worker 0:  Sort Method: quicksort  Memory: 41kB
+              Worker 1:  Sort Method: quicksort  Memory: 41kB
+              ->  Partial HashAggregate  (cost=16835.94..16838.94 rows=240 width=50) (actual time=56.355..56.388 rows=237 loops=3)
+                    Group Key: origin_comuna_label, destination_comuna_label
+                    Batches: 1  Memory Usage: 93kB
+                    Buffers: shared hit=5210 read=7718
+                    Worker 0:  Batches: 1  Memory Usage: 93kB
+                    Worker 1:  Batches: 1  Memory Usage: 93kB
+                    ->  Parallel Seq Scan on agg_station_od_monthly  (cost=0.00..15161.11 rows=223311 width=26) (actual time=0.008..13.009 rows=178649 loops=3)
+                          Buffers: shared hit=5210 read=7718
+Planning:
+  Buffers: shared hit=1
+Planning Time: 0.057 ms
+Execution Time: 65.320 ms

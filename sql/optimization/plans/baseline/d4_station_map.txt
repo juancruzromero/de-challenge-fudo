@@ -1,0 +1,35 @@
+-- sql/optimization/dashboard.sql: Viajes que salen de cada estación en el año, con coordenadas (mapa de estaciones).
+
+select
+    origin_station_id,
+    origin_station_name,
+    origin_latitude,
+    origin_longitude,
+    sum(trips) as trips
+from gold.agg_station_od_monthly
+where origin_latitude is not null
+group by origin_station_id, origin_station_name, origin_latitude, origin_longitude;
+
+Finalize GroupAggregate  (cost=43634.36..62304.14 rows=53595 width=73) (actual time=130.239..211.694 rows=403 loops=1)
+  Group Key: origin_station_id, origin_station_name, origin_latitude, origin_longitude
+  Buffers: shared hit=4682 read=8390, temp read=4262 written=4275
+  ->  Gather Merge  (cost=43634.36..60026.35 rows=107190 width=73) (actual time=129.979..211.332 rows=1207 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=4682 read=8390, temp read=4262 written=4275
+        ->  Partial GroupAggregate  (cost=42634.34..46653.94 rows=53595 width=73) (actual time=90.839..164.553 rows=402 loops=3)
+              Group Key: origin_station_id, origin_station_name, origin_latitude, origin_longitude
+              Buffers: shared hit=4682 read=8390, temp read=4262 written=4275
+              ->  Sort  (cost=42634.34..43192.62 rows=223311 width=49) (actual time=90.617..135.655 rows=178649 loops=3)
+                    Sort Key: origin_station_id, origin_station_name, origin_latitude, origin_longitude
+                    Sort Method: external merge  Disk: 12544kB
+                    Buffers: shared hit=4682 read=8390, temp read=4262 written=4275
+                    Worker 0:  Sort Method: external merge  Disk: 10864kB
+                    Worker 1:  Sort Method: external merge  Disk: 10688kB
+                    ->  Parallel Seq Scan on agg_station_od_monthly  (cost=0.00..15161.11 rows=223311 width=49) (actual time=0.012..27.851 rows=178649 loops=3)
+                          Filter: (origin_latitude IS NOT NULL)
+                          Buffers: shared hit=4538 read=8390
+Planning:
+  Buffers: shared hit=1
+Planning Time: 0.071 ms
+Execution Time: 212.238 ms

@@ -64,6 +64,7 @@ open http://localhost:3000
 | `make docs` | Documentación de dbt (modelos, columnas, tests y linaje) en http://localhost:8080 |
 | `make setup` · `make test` · `make lint` | Entorno local, tests y linters |
 | `make profile` | Regenera el reporte de profiling de los datasets |
+| `make bench label=x` | Mide consultas y build de dbt (`baseline=y` para comparar) |
 
 ## 📦 Datasets
 
@@ -114,4 +115,5 @@ El proyecto se desarrolla con **Spec-Driven Development**:
 - 🗺️ [er-diagram.md](docs/er-diagram.md): modelo estrella y linaje de los datos.
 - 📖 [data-dictionary.md](docs/data-dictionary.md): cada columna, del archivo a silver, con sus reglas de limpieza.
 - 🧾 [docs/adr/](docs/adr/README.md): decisiones de datos (comunas, catálogo de estaciones, cobertura de usuarios).
+- ⚡ [sql/optimization/](sql/optimization/README.md): mediciones con `EXPLAIN ANALYZE` y diagnóstico de performance.
 - 📝 [CHALLENGUE.md](CHALLENGUE.md): enunciado original.

@@ -1,0 +1,66 @@
+-- sql/analysis/q5_duracion_vs_modelo.sql: 2. Control por distancia: la misma comparación dentro de cada tramo de distancia en línea
+
+select
+    case
+        when viaje.is_round_trip then '0. Ida y vuelta'
+        when viaje.distance_m < 1000 then '1. Menos de 1 km'
+        when viaje.distance_m < 2000 then '2. 1 a 2 km'
+        when viaje.distance_m < 3000 then '3. 2 a 3 km'
+        when viaje.distance_m < 5000 then '4. 3 a 5 km'
+        else '5. 5 km o más'
+    end as tramo_de_distancia,
+    round(
+        (
+            percentile_cont(0.5) within group (order by viaje.duration_minutes)
+            filter (where modelo.bike_model = 'FIT')
+        )::numeric,
+        2
+    ) as mediana_fit_min,
+    round(
+        (
+            percentile_cont(0.5) within group (order by viaje.duration_minutes)
+            filter (where modelo.bike_model = 'ICONIC')
+        )::numeric,
+        2
+    ) as mediana_iconic_min,
+    count(*) as viajes
+from gold.fct_trips as viaje
+inner join gold.dim_bike_model as modelo
+    on viaje.bike_model_id = modelo.bike_model_id
+where viaje.distance_m is not null
+group by tramo_de_distancia
+order by tramo_de_distancia;
+
+GroupAggregate  (cost=212390.92..746046.02 rows=10926 width=104) (actual time=697.351..2817.586 rows=6 loops=1)
+  Group Key: CASE WHEN viaje.is_round_trip THEN '0. Ida y vuelta'::text WHEN (viaje.distance_m < '1000'::numeric) THEN '1. Menos de 1 km'::text WHEN (viaje.distance_m < '2000'::numeric) THEN '2. 1 a 2 km'::text WHEN (viaje.distance_m < '3000'::numeric) THEN '3. 2 a 3 km'::text WHEN (viaje.distance_m < '5000'::numeric) THEN '4. 3 a 5 km'::text ELSE '5. 5 km o más'::text END
+  Buffers: shared hit=13538 read=28692 written=25, temp read=33451 written=34092
+  ->  Nested Loop  (cost=212390.92..682541.93 rows=3156084 width=70) (actual time=511.015..1868.812 rows=3155689 loops=1)
+        Buffers: shared hit=13538 read=28692 written=25, temp read=30220 written=30281
+        ->  Gather Merge  (cost=212390.78..579968.78 rows=3156084 width=13) (actual time=510.983..1076.767 rows=3155689 loops=1)
+              Workers Planned: 2
+              Workers Launched: 2
+              Buffers: shared hit=13534 read=28692 written=25, temp read=30220 written=30281
+              ->  Sort  (cost=211390.76..214678.35 rows=1315035 width=13) (actual time=501.084..603.000 rows=1051896 loops=3)
+                    Sort Key: (CASE WHEN viaje.is_round_trip THEN '0. Ida y vuelta'::text WHEN (viaje.distance_m < '1000'::numeric) THEN '1. Menos de 1 km'::text WHEN (viaje.distance_m < '2000'::numeric) THEN '2. 1 a 2 km'::text WHEN (viaje.distance_m < '3000'::numeric) THEN '3. 2 a 3 km'::text WHEN (viaje.distance_m < '5000'::numeric) THEN '4. 3 a 5 km'::text ELSE '5. 5 km o más'::text END)
+                    Sort Method: external merge  Disk: 41640kB
+                    Buffers: shared hit=13534 read=28692 written=25, temp read=30220 written=30281
+                    Worker 0:  Sort Method: external merge  Disk: 39616kB
+                    Worker 1:  Sort Method: external merge  Disk: 39704kB
+                    ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55262.35 rows=1315035 width=13) (actual time=77.319..222.105 rows=1051896 loops=3)
+                          Filter: (distance_m IS NOT NULL)
+                          Rows Removed by Filter: 31
+                          Buffers: shared hit=13420 read=28692 written=25
+        ->  Memoize  (cost=0.14..0.16 rows=1 width=34) (actual time=0.000..0.000 rows=1 loops=3155689)
+              Cache Key: viaje.bike_model_id
+              Cache Mode: logical
+              Hits: 3155687  Misses: 2  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+              Buffers: shared hit=4
+              ->  Index Scan using "09f866824deae813e2507bc221263319" on dim_bike_model modelo  (cost=0.13..0.15 rows=1 width=34) (actual time=0.008..0.008 rows=1 loops=2)
+                    Index Cond: (bike_model_id = viaje.bike_model_id)
+                    Buffers: shared hit=4
+Planning Time: 0.123 ms
+JIT:
+  Functions: 28
+  Options: Inlining true, Optimization true, Expressions true, Deforming true
+  Timing: Generation 1.220 ms, Inlining 84.403 ms, Optimization 80.893 ms, Emission 66.601 ms, Total 233.116 ms
+Execution Time: 2820.600 ms

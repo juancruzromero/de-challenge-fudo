@@ -1,0 +1,57 @@
+-- sql/analysis/q3_edad_vs_viajes.sql: 2. Correlación y regresión lineal simple viajes ~ edad, a nivel usuario.
+
+with viajes_por_usuario as (
+    select
+        usuario.age,
+        count(viaje.trip_id) as viajes
+    from gold.dim_user as usuario
+    left join gold.fct_trips as viaje
+        on usuario.user_id = viaje.user_id
+    where usuario.has_profile and usuario.age is not null
+    group by usuario.user_id, usuario.age
+)
+select
+    count(*) as usuarios,
+    round(corr(viajes, age)::numeric, 4) as pearson_r,
+    round(regr_slope(viajes, age)::numeric, 4) as viajes_por_anio_de_edad,
+    round(regr_r2(viajes, age)::numeric, 4) as r_cuadrado
+from viajes_por_usuario;
+
+Aggregate  (cost=267813.52..267813.54 rows=1 width=104) (actual time=858.963..862.921 rows=1 loops=1)
+  Buffers: shared hit=12512 read=34802, temp read=7086 written=7116
+  ->  Finalize GroupAggregate  (cost=169428.81..261523.69 rows=314491 width=18) (actual time=538.566..834.722 rows=389575 loops=1)
+        Group Key: usuario.user_id, usuario.age
+        Buffers: shared hit=12512 read=34802, temp read=7086 written=7116
+        ->  Gather Merge  (cost=169428.81..253661.41 rows=628982 width=18) (actual time=538.544..730.313 rows=551087 loops=1)
+              Workers Planned: 2
+              Workers Launched: 2
+              Buffers: shared hit=12512 read=34802, temp read=7086 written=7116
+              ->  Partial GroupAggregate  (cost=168428.79..180061.26 rows=314491 width=18) (actual time=469.339..620.618 rows=183696 loops=3)
+                    Group Key: usuario.user_id, usuario.age
+                    Buffers: shared hit=12512 read=34802, temp read=7086 written=7116
+                    ->  Sort  (cost=168428.79..170550.68 rows=848756 width=18) (actual time=469.308..535.407 rows=582564 loops=3)
+                          Sort Key: usuario.user_id, usuario.age
+                          Sort Method: external merge  Disk: 17328kB
+                          Buffers: shared hit=12512 read=34802, temp read=7086 written=7116
+                          Worker 0:  Sort Method: external merge  Disk: 22080kB
+                          Worker 1:  Sort Method: external merge  Disk: 17280kB
+                          ->  Parallel Hash Right Join  (cost=8724.23..67438.58 rows=848756 width=18) (actual time=42.964..344.235 rows=582564 loops=3)
+                                Hash Cond: (viaje.user_id = usuario.user_id)
+                                Buffers: shared hit=12384 read=34802
+                                ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55262.35 rows=1315035 width=16) (actual time=0.022..77.612 rows=1051928 loops=3)
+                                      Buffers: shared hit=11208 read=30904
+                                ->  Parallel Hash  (cost=7086.26..7086.26 rows=131038 width=10) (actual time=42.474..42.475 rows=129858 loops=3)
+                                      Buckets: 524288  Batches: 1  Memory Usage: 22464kB
+                                      Buffers: shared hit=1158 read=3898
+                                      ->  Parallel Seq Scan on dim_user usuario  (cost=0.00..7086.26 rows=131038 width=10) (actual time=8.060..22.577 rows=129858 loops=3)
+                                            Filter: (has_profile AND (age IS NOT NULL))
+                                            Rows Removed by Filter: 32562
+                                            Buffers: shared hit=1158 read=3898
+Planning:
+  Buffers: shared hit=17
+Planning Time: 0.192 ms
+JIT:
+  Functions: 59
+  Options: Inlining false, Optimization false, Expressions true, Deforming true
+  Timing: Generation 1.434 ms, Inlining 0.000 ms, Optimization 1.486 ms, Emission 22.787 ms, Total 25.707 ms
+Execution Time: 864.757 ms
