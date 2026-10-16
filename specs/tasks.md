@@ -73,7 +73,7 @@
   - Commit: `feat(dbt): add silver users`
 - [x] **T4.4** Silver de viajes con reglas FR-07 y rejected (FR-08): 3.155.783 válidos + 399 rechazados; test warn para los 8 viajes con fin = inicio.
   - Commit: `feat(dbt): add silver trips with quality rules`
-- [~] **T4.5** Tests dbt de silver + reconciliación bronze = silver + rejected (`silver.reconciliation` + test `assert_silver_reconciles_with_bronze`).
+- [x] **T4.5** Tests dbt de silver + reconciliación bronze = silver + rejected (`silver.reconciliation` + test `assert_silver_reconciles_with_bronze`).
   - Commit: `test(dbt): add silver data quality tests`
 
 ## Fase 5 — Gold (dbt) + análisis
