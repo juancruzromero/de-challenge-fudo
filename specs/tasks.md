@@ -46,12 +46,12 @@
   - Commit: `build(docker): add compose stack`
 - [x] **T2.2** `sql/init/`: extensión `postgis`; schemas `bronze`, `silver`, `gold`; roles `etl` (escritura) y `bi_reader` (solo lectura en gold).
   - Commit: `feat(db): add init scripts for schemas and roles`
-- [~] **T2.3** `Makefile`: `up`, `down`, `reset`, `ps`, `logs`, `psql`, `etl`, `dbt`, `sql`, `setup`, `test`, `lint`, `profile` (crea `.env` desde `.env.example`; los comandos de servicios futuros avisan en qué tarea llegan).
+- [x] **T2.3** `Makefile`: `up`, `down`, `reset`, `ps`, `logs`, `psql`, `etl`, `dbt`, `sql`, `setup`, `test`, `lint`, `profile` (crea `.env` desde `.env.example`; los comandos de servicios futuros avisan en qué tarea llegan).
   - Aceptación: `make help` lista los targets.
   - Commit: `build: add Makefile entrypoints`
 
 ## Fase 3 — Bronze (Python)
-- [ ] **T3.1** `config.py` (settings por env) y logging estructurado.
+- [~] **T3.1** `config.py` (settings por env, validados al arrancar, contraseña fuera del `repr`) y `log.py` (logging estructurado JSON/texto + `stage()` con duración por etapa).
   - Commit: `feat(etl): add config and logging`
 - [ ] **T3.2** `extract.py`: mapeo archivo → tabla bronze (`trips`, `users_2024`, `users_2025`, `stations`, `stations_legacy`, `comunas`), quitar BOM, normalizar headers a snake_case (FR-01b), hash SHA-256 por archivo.
   - Aceptación: tests de normalización (`ID Cliente` → `id_cliente`, `género` → `genero`, BOM).
