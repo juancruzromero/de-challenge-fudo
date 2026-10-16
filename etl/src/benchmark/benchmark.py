@@ -40,6 +40,7 @@ SETTINGS = (
 )
 BLOCK_BYTES = 8192
 STATS_MIN_ROWS = 10_000  # por debajo, el autovacuum puede no analizar nunca la tabla
+NOISE = 1.05  # diferencias de hasta ±5 % entre mediciones son ruido de la laptop
 NAME_COMMENT = re.compile(r"^--\s*name:\s*(\S+)\s*$")
 
 
@@ -241,7 +242,9 @@ def speedup(before: float, after: float) -> str:
     if after <= 0 or before <= 0:
         return "–"
     ratio = before / after
-    return f"{fmt_num(ratio, 1)}×" if ratio >= 1 else f"{fmt_num(ratio, 2)}× (peor)"
+    if 1 / NOISE <= ratio <= NOISE:
+        return "≈ igual"
+    return f"{fmt_num(ratio, 1)}×" if ratio > 1 else f"{fmt_num(ratio, 2)}× (peor)"
 
 
 def render_report(report: dict, baseline: dict | None) -> str:
@@ -256,8 +259,7 @@ def render_report(report: dict, baseline: dict | None) -> str:
         f"- {report['version']}",
         f"- Corridas por consulta: {report['runs']} (más una de calentamiento); se informa la "
         "mediana del tiempo de ejecución de `EXPLAIN ANALYZE`.",
-        "- Configuración: "
-        + ", ".join(f"`{k}={v}`" for k, v in report["settings"].items()),
+        "- Configuración: " + ", ".join(f"`{k}={v}`" for k, v in report["settings"].items()),
     ]
     wait = report.get("stats_wait_s", 0)
     lines.append(

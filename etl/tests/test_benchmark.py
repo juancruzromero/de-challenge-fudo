@@ -79,6 +79,8 @@ def test_formatting():
     assert fmt_ms(12.34) == "12,3"
     assert speedup(1000, 250) == "4,0×"
     assert speedup(100, 200) == "0,50× (peor)"
+    assert speedup(1000, 1040) == "≈ igual"
+    assert speedup(1040, 1000) == "≈ igual"
 
 
 def test_dbt_timings_keeps_only_models(tmp_path):
