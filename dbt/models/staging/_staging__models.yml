@@ -11,5 +11,6 @@ models:
 
   - name: stg_bronze__trip_stations
     description: >
-      Atributos de estación como aparecen en cada viaje (una fila por extremo: origen y
-      destino). Coordenadas fuera de CABA quedan en NULL.
+      Atributos de estación como aparecen en los viajes: una fila por variante distinta
+      (ID, nombre, dirección y coordenadas), con trip_ends = cantidad de extremos de viaje
+      (origen o destino) que la usan. Coordenadas fuera de CABA quedan en NULL.

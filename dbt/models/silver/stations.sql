@@ -35,7 +35,7 @@ missing_from_catalog as (
         trip_station.address,
         trip_station.latitude,
         trip_station.longitude,
-        count(*) as trip_ends
+        sum(trip_station.trip_ends) as trip_ends
     from {{ ref('stg_bronze__trip_stations') }} as trip_station
     where
         trip_station.station_id is not null
