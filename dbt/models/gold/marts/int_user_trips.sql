@@ -1,17 +1,38 @@
-{{ config(materialized='ephemeral') }}
+{{
+    config(
+        indexes=[
+            {'columns': ['user_id'], 'unique': true},
+        ]
+    )
+}}
 
 -- Viajes de 2025 por usuario, para todos los usuarios de dim_user (incluye los de 0 viajes).
 -- exposure_days: días de 2025 en los que el usuario pudo viajar, desde su alta (o el 1 de
 -- enero si se dio de alta antes) hasta el 31 de diciembre. NULL sin perfil (alta desconocida).
--- Lo usan Q3, Q4 y Q6; no se materializa.
+-- Lo usan Q3, Q4 y Q6. Se materializa una vez (T6.2): como efímero lo recalculaba cada mart.
+--
+-- Se agrega en dos pasos (usuario × día y después usuario) en lugar de count(distinct): un
+-- count(distinct) obliga al planner a leer fct_trips ordenado por usuario, por índice y con
+-- acceso aleatorio, y en paralelo cada worker repetía la agregación completa
+-- (sql/optimization/README.md).
 
-with trips_by_user as (
+with trips_by_user_day as (
     select
         user_id,
+        start_date,
         count(*) as trips,
-        sum(duration_seconds) as duration_seconds,
-        count(distinct start_date) as active_days
+        sum(duration_seconds) as duration_seconds
     from {{ ref('fct_trips') }}
+    group by user_id, start_date
+),
+
+trips_by_user as (
+    select
+        user_id,
+        sum(trips)::bigint as trips,
+        sum(duration_seconds)::bigint as duration_seconds,
+        count(*) as active_days
+    from trips_by_user_day
     group by user_id
 )
 
