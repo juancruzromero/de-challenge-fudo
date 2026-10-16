@@ -1,0 +1,92 @@
+-- sql/analysis/q1_comunas_origen.sql: Q1: ¿De qué comunas parten más viajes?
+
+with viajes_por_comuna as (
+    select
+        estacion.comuna_label as comuna,
+        count(*) as viajes
+    from gold.fct_trips as viaje
+    inner join gold.dim_station as estacion
+        on viaje.origin_station_id = estacion.station_id
+    group by estacion.comuna_label
+),
+estaciones_por_comuna as (
+    select
+        comuna_label as comuna,
+        count(*) as estaciones
+    from gold.dim_station
+    group by comuna_label
+)
+select
+    rank() over (order by viajes_por_comuna.viajes desc) as ranking,
+    viajes_por_comuna.comuna,
+    viajes_por_comuna.viajes,
+    round(100.0 * viajes_por_comuna.viajes / sum(viajes_por_comuna.viajes) over (), 2)
+        as pct_viajes,
+    estaciones_por_comuna.estaciones,
+    round(viajes_por_comuna.viajes::numeric / estaciones_por_comuna.estaciones, 0)
+        as viajes_por_estacion
+from viajes_por_comuna
+inner join estaciones_por_comuna
+    on viajes_por_comuna.comuna = estaciones_por_comuna.comuna
+order by ranking;
+
+Sort  (cost=50945.92..50945.96 rows=16 width=97) (actual time=264.775..265.545 rows=15 loops=1)
+  Sort Key: (rank() OVER (?))
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=4542
+  ->  WindowAgg  (cost=50944.80..50945.60 rows=16 width=97) (actual time=264.766..265.542 rows=15 loops=1)
+        Buffers: shared hit=4542
+        ->  WindowAgg  (cost=50944.80..50945.08 rows=16 width=33) (actual time=264.755..265.529 rows=15 loops=1)
+              Buffers: shared hit=4542
+              ->  Sort  (cost=50944.80..50944.84 rows=16 width=25) (actual time=264.753..265.523 rows=15 loops=1)
+                    Sort Key: (count(*)) DESC
+                    Sort Method: quicksort  Memory: 25kB
+                    Buffers: shared hit=4542
+                    ->  Hash Join  (cost=50940.37..50944.48 rows=16 width=25) (actual time=264.737..265.519 rows=15 loops=1)
+                          Hash Cond: (estacion.comuna_label = estaciones_por_comuna.comuna)
+                          Buffers: shared hit=4542
+                          ->  Finalize GroupAggregate  (cost=50924.66..50928.71 rows=16 width=17) (actual time=264.652..265.430 rows=15 loops=1)
+                                Group Key: estacion.comuna_label
+                                Buffers: shared hit=4533
+                                ->  Gather Merge  (cost=50924.66..50928.39 rows=32 width=17) (actual time=264.648..265.423 rows=45 loops=1)
+                                      Workers Planned: 2
+                                      Workers Launched: 2
+                                      Buffers: shared hit=4533
+                                      ->  Sort  (cost=49924.63..49924.67 rows=16 width=17) (actual time=263.632..263.633 rows=15 loops=3)
+                                            Sort Key: estacion.comuna_label
+                                            Sort Method: quicksort  Memory: 25kB
+                                            Buffers: shared hit=4533
+                                            Worker 0:  Sort Method: quicksort  Memory: 25kB
+                                            Worker 1:  Sort Method: quicksort  Memory: 25kB
+                                            ->  Partial HashAggregate  (cost=49924.15..49924.31 rows=16 width=17) (actual time=263.616..263.618 rows=15 loops=3)
+                                                  Group Key: estacion.comuna_label
+                                                  Batches: 1  Memory Usage: 24kB
+                                                  Buffers: shared hit=4517
+                                                  Worker 0:  Batches: 1  Memory Usage: 24kB
+                                                  Worker 1:  Batches: 1  Memory Usage: 24kB
+                                                  ->  Hash Join  (cost=18.72..43349.64 rows=1314903 width=9) (actual time=0.088..162.390 rows=1051928 loops=3)
+                                                        Hash Cond: (viaje.origin_station_id = estacion.station_id)
+                                                        Buffers: shared hit=4517
+                                                        ->  Parallel Index Only Scan using fec455bba672d424e8d41a2ceb16a27e on fct_trips viaje  (cost=0.43..39844.30 rows=1314903 width=8) (actual time=0.009..60.140 rows=1051928 loops=3)
+                                                              Heap Fetches: 0
+                                                              Buffers: shared hit=4466
+                                                        ->  Hash  (cost=13.13..13.13 rows=413 width=17) (actual time=0.067..0.068 rows=413 loops=3)
+                                                              Buckets: 1024  Batches: 1  Memory Usage: 31kB
+                                                              Buffers: shared hit=27
+                                                              ->  Seq Scan on dim_station estacion  (cost=0.00..13.13 rows=413 width=17) (actual time=0.004..0.039 rows=413 loops=3)
+                                                                    Buffers: shared hit=27
+                          ->  Hash  (cost=15.52..15.52 rows=16 width=17) (actual time=0.077..0.078 rows=16 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                Buffers: shared hit=9
+                                ->  Subquery Scan on estaciones_por_comuna  (cost=15.20..15.52 rows=16 width=17) (actual time=0.073..0.076 rows=16 loops=1)
+                                      Buffers: shared hit=9
+                                      ->  HashAggregate  (cost=15.20..15.36 rows=16 width=17) (actual time=0.073..0.075 rows=16 loops=1)
+                                            Group Key: dim_station.comuna_label
+                                            Batches: 1  Memory Usage: 24kB
+                                            Buffers: shared hit=9
+                                            ->  Seq Scan on dim_station  (cost=0.00..13.13 rows=413 width=9) (actual time=0.002..0.021 rows=413 loops=1)
+                                                  Buffers: shared hit=9
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.134 ms
+Execution Time: 265.572 ms

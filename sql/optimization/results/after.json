@@ -1,0 +1,385 @@
+{
+  "label": "after",
+  "date": "2026-10-16 02:15",
+  "version": "PostgreSQL 16.10 (Debian 16.10-1.pgdg12+1)",
+  "runs": 5,
+  "settings": {
+    "shared_buffers": "128MB",
+    "work_mem": "4MB",
+    "effective_cache_size": "4GB",
+    "max_parallel_workers_per_gather": "2",
+    "jit": "on",
+    "random_page_cost": "4"
+  },
+  "stats_wait_s": 0,
+  "without_stats": [],
+  "queries": [
+    {
+      "name": "q1_comunas_origen",
+      "title": "Q1: ¿De qué comunas parten más viajes?",
+      "source": "sql/analysis/q1_comunas_origen.sql",
+      "runs_ms": [
+        259.838,
+        268.992,
+        259.04,
+        260.653,
+        265.672
+      ],
+      "planning_ms": 0.156,
+      "shared_hit_mb": 35.46875,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 0.0,
+      "workers": 2,
+      "scans": [
+        "Index Only Scan fct_trips",
+        "Seq Scan dim_station"
+      ]
+    },
+    {
+      "name": "q2_comunas_destino",
+      "title": "Q2: ¿Qué comunas reciben más viajes?",
+      "source": "sql/analysis/q2_comunas_destino.sql",
+      "runs_ms": [
+        550.239,
+        544.931,
+        550.848,
+        553.359,
+        557.759
+      ],
+      "planning_ms": 0.2,
+      "shared_hit_mb": 70.34375,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 0.0,
+      "workers": 2,
+      "scans": [
+        "Index Only Scan fct_trips",
+        "Seq Scan dim_station"
+      ]
+    },
+    {
+      "name": "q3_edad_vs_viajes_1",
+      "title": "Q3: ¿Qué relación hay entre la edad de los usuarios y la cantidad de viajes que hicieron?",
+      "source": "sql/analysis/q3_edad_vs_viajes.sql",
+      "runs_ms": [
+        805.427,
+        749.158,
+        747.021,
+        762.668,
+        748.877
+      ],
+      "planning_ms": 0.16,
+      "shared_hit_mb": 28.4140625,
+      "shared_read_mb": 341.3515625,
+      "temp_written_mb": 55.6171875,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Seq Scan dim_user"
+      ]
+    },
+    {
+      "name": "q3_edad_vs_viajes_2",
+      "title": "2. Correlación y regresión lineal simple viajes ~ edad, a nivel usuario.",
+      "source": "sql/analysis/q3_edad_vs_viajes.sql",
+      "runs_ms": [
+        699.51,
+        661.508,
+        663.637,
+        646.245,
+        644.69
+      ],
+      "planning_ms": 0.156,
+      "shared_hit_mb": 38.7890625,
+      "shared_read_mb": 330.8515625,
+      "temp_written_mb": 55.6015625,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Seq Scan dim_user"
+      ]
+    },
+    {
+      "name": "q4_fecha_alta_vs_viajes_1",
+      "title": "Q4: ¿Qué relación hay entre la cantidad de viajes y la fecha de alta de los usuarios?",
+      "source": "sql/analysis/q4_fecha_alta_vs_viajes.sql",
+      "runs_ms": [
+        767.545,
+        737.704,
+        746.457,
+        731.746,
+        731.008
+      ],
+      "planning_ms": 0.169,
+      "shared_hit_mb": 49.4140625,
+      "shared_read_mb": 320.3515625,
+      "temp_written_mb": 188.1953125,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Seq Scan dim_user"
+      ]
+    },
+    {
+      "name": "q4_fecha_alta_vs_viajes_2",
+      "title": "Resumen por año de alta: las altas 2025 siguen activas mucho más que las de 2024.",
+      "source": "sql/analysis/q4_fecha_alta_vs_viajes.sql",
+      "runs_ms": [
+        711.07,
+        710.773,
+        780.62,
+        749.209,
+        756.994
+      ],
+      "planning_ms": 0.163,
+      "shared_hit_mb": 59.9140625,
+      "shared_read_mb": 309.8515625,
+      "temp_written_mb": 55.609375,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Seq Scan dim_user"
+      ]
+    },
+    {
+      "name": "q5_duracion_vs_modelo_1",
+      "title": "Q5: ¿Qué relación hay entre la duración de los viajes y el modelo de bicicleta?",
+      "source": "sql/analysis/q5_duracion_vs_modelo.sql",
+      "runs_ms": [
+        2297.421,
+        2308.554,
+        2305.798,
+        2302.191,
+        2301.57
+      ],
+      "planning_ms": 0.107,
+      "shared_hit_mb": 29.984375,
+      "shared_read_mb": 299.03125,
+      "temp_written_mb": 156.875,
+      "workers": 0,
+      "scans": [
+        "Index Scan dim_bike_model",
+        "Seq Scan fct_trips"
+      ]
+    },
+    {
+      "name": "q5_duracion_vs_modelo_2",
+      "title": "2. Control por distancia: la misma comparación dentro de cada tramo de distancia en línea",
+      "source": "sql/analysis/q5_duracion_vs_modelo.sql",
+      "runs_ms": [
+        1708.433,
+        1700.226,
+        1710.998,
+        1699.302,
+        1689.333
+      ],
+      "planning_ms": 0.114,
+      "shared_hit_mb": 35.59375,
+      "shared_read_mb": 294.7734375,
+      "temp_written_mb": 243.0703125,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Seq Scan dim_bike_model"
+      ]
+    },
+    {
+      "name": "q6_usuarios_mas_activos",
+      "title": "Q6: ¿Quiénes fueron los usuarios más activos durante 2025?",
+      "source": "sql/analysis/q6_usuarios_mas_activos.sql",
+      "runs_ms": [
+        2106.512,
+        2104.828,
+        2131.563,
+        2109.447,
+        2102.009
+      ],
+      "planning_ms": 0.252,
+      "shared_hit_mb": 232.875,
+      "shared_read_mb": 222.8046875,
+      "temp_written_mb": 553.171875,
+      "workers": 2,
+      "scans": [
+        "Seq Scan fct_trips",
+        "Index Scan fct_trips",
+        "Index Scan dim_station",
+        "Index Scan dim_user"
+      ]
+    },
+    {
+      "name": "d1_top_od_month",
+      "title": "Consultas representativas del dashboard de Metabase (T7.2), para medir con make bench.",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        10.949,
+        10.831,
+        10.667,
+        10.732,
+        10.724
+      ],
+      "planning_ms": 0.025,
+      "shared_hit_mb": 10.8984375,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 0.0,
+      "workers": 0,
+      "scans": [
+        "Bitmap Heap Scan agg_station_od_monthly"
+      ]
+    },
+    {
+      "name": "d1_top_od_month_from_fct",
+      "title": "La misma consulta sin el agregado, directo sobre fct_trips: lo que costaría sin",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        467.178,
+        462.479,
+        460.875,
+        462.807,
+        461.788
+      ],
+      "planning_ms": 0.18,
+      "shared_hit_mb": 32.671875,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 13.0390625,
+      "workers": 0,
+      "scans": [
+        "Bitmap Heap Scan fct_trips",
+        "Seq Scan dim_station"
+      ]
+    },
+    {
+      "name": "d2_top_od_by_comuna",
+      "title": "Top 20 recorridos del año que salen de una comuna (filtro de comuna del dashboard).",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        26.624,
+        26.376,
+        27.097,
+        27.563,
+        26.393
+      ],
+      "planning_ms": 0.042,
+      "shared_hit_mb": 18.8515625,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 0.0,
+      "workers": 0,
+      "scans": [
+        "Bitmap Heap Scan agg_station_od_monthly"
+      ]
+    },
+    {
+      "name": "d3_monthly_trend",
+      "title": "Evolución mensual de viajes (serie de tiempo del dashboard).",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        43.602,
+        43.522,
+        43.453,
+        43.512,
+        43.36
+      ],
+      "planning_ms": 0.042,
+      "shared_hit_mb": 29.578125,
+      "shared_read_mb": 71.546875,
+      "temp_written_mb": 0.0,
+      "workers": 2,
+      "scans": [
+        "Seq Scan agg_station_od_monthly"
+      ]
+    },
+    {
+      "name": "d4_station_map",
+      "title": "Viajes que salen de cada estación en el año, con coordenadas (mapa de estaciones).",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        174.585,
+        186.434,
+        182.111,
+        184.836,
+        183.747
+      ],
+      "planning_ms": 0.056,
+      "shared_hit_mb": 35.828125,
+      "shared_read_mb": 66.296875,
+      "temp_written_mb": 33.40625,
+      "workers": 2,
+      "scans": [
+        "Seq Scan agg_station_od_monthly"
+      ]
+    },
+    {
+      "name": "d5_comuna_matrix",
+      "title": "Matriz comuna de origen × comuna de destino en el año.",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        52.614,
+        52.653,
+        52.157,
+        52.047,
+        52.148
+      ],
+      "planning_ms": 0.053,
+      "shared_hit_mb": 40.078125,
+      "shared_read_mb": 61.046875,
+      "temp_written_mb": 0.0,
+      "workers": 2,
+      "scans": [
+        "Seq Scan agg_station_od_monthly"
+      ]
+    },
+    {
+      "name": "d6_station_drilldown",
+      "title": "Destinos de una estación, mes a mes (detalle de una estación).",
+      "source": "sql/optimization/dashboard.sql",
+      "runs_ms": [
+        0.992,
+        0.998,
+        0.981,
+        0.986,
+        0.974
+      ],
+      "planning_ms": 0.021,
+      "shared_hit_mb": 0.578125,
+      "shared_read_mb": 0.0,
+      "temp_written_mb": 0.0,
+      "workers": 0,
+      "scans": [
+        "Bitmap Heap Scan agg_station_od_monthly"
+      ]
+    }
+  ],
+  "dbt": {
+    "elapsed_s": 45.19196844100952,
+    "models": {
+      "stg_bronze__stations": 0.08879733085632324,
+      "stg_bronze__trips": 0.07776689529418945,
+      "stg_bronze__comunas": 0.10301351547241211,
+      "stg_bronze__trip_stations": 0.1058506965637207,
+      "stg_bronze__users_2025": 0.04123067855834961,
+      "stg_bronze__users_2024": 0.04381585121154785,
+      "comunas": 0.1079568862915039,
+      "dim_comuna": 0.11352419853210449,
+      "users_rejected": 1.2132022380828857,
+      "users": 1.715212345123291,
+      "stations": 4.620577573776245,
+      "dim_station": 0.05796527862548828,
+      "trips_validated": 23.87842321395874,
+      "trips_rejected": 0.1502687931060791,
+      "trips": 2.8075878620147705,
+      "dim_bike_model": 0.33272409439086914,
+      "reconciliation": 0.4910001754760742,
+      "dim_date": 0.5995845794677734,
+      "dim_user": 2.548370838165283,
+      "fct_trips": 7.59013819694519,
+      "mart_q1_comunas_origin": 0.6201691627502441,
+      "mart_q2_comunas_destination": 0.6858384609222412,
+      "int_user_trips": 3.052790880203247,
+      "mart_q5_duration_by_bike_model": 2.5799341201782227,
+      "mart_q3_trips_by_age_group": 0.15688109397888184,
+      "mart_q3_age_correlation": 0.3149876594543457,
+      "mart_q4_trips_by_signup_month": 0.09939098358154297,
+      "mart_q5_duration_by_model_and_distance": 2.870762825012207,
+      "mart_q6_top_users": 1.2337429523468018,
+      "agg_station_od_monthly": 5.649727821350098
+    }
+  }
+}

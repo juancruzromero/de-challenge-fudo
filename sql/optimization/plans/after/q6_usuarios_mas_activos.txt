@@ -1,0 +1,148 @@
+-- sql/analysis/q6_usuarios_mas_activos.sql: Q6: ¿Quiénes fueron los usuarios más activos durante 2025?
+
+with viajes_por_usuario_y_dia as (
+    select
+        user_id,
+        start_date,
+        count(*) as viajes,
+        sum(duration_seconds) as segundos
+    from gold.fct_trips
+    group by user_id, start_date
+),
+viajes_por_usuario as (
+    select
+        user_id,
+        sum(viajes) as viajes,
+        round(sum(segundos) / 3600.0, 1) as horas_totales,
+        count(*) as dias_con_viajes
+    from viajes_por_usuario_y_dia
+    group by user_id
+),
+top_usuarios as (
+    select
+        *,
+        row_number() over (order by viajes desc, horas_totales desc) as ranking
+    from viajes_por_usuario
+    order by ranking
+    limit 20
+),
+estacion_favorita as (
+    select distinct on (viaje.user_id)
+        viaje.user_id,
+        viaje.origin_station_id
+    from gold.fct_trips as viaje
+    inner join top_usuarios
+        on viaje.user_id = top_usuarios.user_id
+    group by viaje.user_id, viaje.origin_station_id
+    order by viaje.user_id asc, count(*) desc, viaje.origin_station_id asc
+)
+select
+    top_usuarios.ranking,
+    top_usuarios.user_id,
+    top_usuarios.viajes,
+    top_usuarios.horas_totales,
+    top_usuarios.dias_con_viajes,
+    round(top_usuarios.viajes / top_usuarios.dias_con_viajes, 1) as viajes_por_dia_con_viajes,
+    estacion.station_name as estacion_favorita,
+    case when usuario.has_profile then 'sí' else 'no' end as tiene_perfil,
+    usuario.age_group as rango_etario
+from top_usuarios
+inner join estacion_favorita
+    on top_usuarios.user_id = estacion_favorita.user_id
+inner join gold.dim_user as usuario
+    on top_usuarios.user_id = usuario.user_id
+inner join gold.dim_station as estacion
+    on estacion_favorita.origin_station_id = estacion.station_id
+order by top_usuarios.ranking;
+
+Sort  (cost=293723.40..293723.68 rows=112 width=172) (actual time=2092.096..2092.147 rows=20 loops=1)
+  Sort Key: top_usuarios.ranking
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=29904 read=28423, temp read=54869 written=70759
+  CTE top_usuarios
+    ->  Limit  (cost=288884.98..288885.03 rows=20 width=88) (actual time=2081.926..2081.976 rows=20 loops=1)
+          Buffers: shared hit=13721 read=28423, temp read=54869 written=70759
+          ->  Sort  (cost=288884.98..288885.48 rows=200 width=88) (actual time=2068.534..2068.583 rows=20 loops=1)
+                Sort Key: (row_number() OVER (?))
+                Sort Method: top-N heapsort  Memory: 26kB
+                Buffers: shared hit=13721 read=28423, temp read=54869 written=70759
+                ->  WindowAgg  (cost=288875.66..288879.66 rows=200 width=88) (actual time=1960.072..2043.807 rows=286241 loops=1)
+                      Buffers: shared hit=13721 read=28423, temp read=54869 written=70759
+                      ->  Sort  (cost=288875.66..288876.16 rows=200 width=80) (actual time=1960.048..2009.191 rows=286241 loops=1)
+                            Sort Key: viajes_por_usuario.viajes DESC, viajes_por_usuario.horas_totales DESC
+                            Sort Method: external merge  Disk: 11776kB
+                            Buffers: shared hit=13721 read=28423, temp read=54869 written=70759
+                            ->  Subquery Scan on viajes_por_usuario  (cost=199445.39..288868.01 rows=200 width=80) (actual time=842.313..1825.889 rows=286241 loops=1)
+                                  Buffers: shared hit=13721 read=28423, temp read=53397 written=69282
+                                  ->  GroupAggregate  (cost=199445.39..288868.01 rows=200 width=80) (actual time=842.312..1808.348 rows=286241 loops=1)
+                                        Group Key: fct_trips.user_id
+                                        Buffers: shared hit=13721 read=28423, temp read=53397 written=69282
+                                        ->  Finalize GroupAggregate  (cost=199445.39..282552.47 rows=315577 width=28) (actual time=842.302..1557.479 rows=2289619 loops=1)
+                                              Group Key: fct_trips.user_id, fct_trips.start_date
+                                              Buffers: shared hit=13721 read=28423, temp read=53397 written=69282
+                                              ->  Gather Merge  (cost=199445.39..273085.16 rows=631154 width=28) (actual time=842.278..1183.357 rows=2790498 loops=1)
+                                                    Workers Planned: 2
+                                                    Workers Launched: 2
+                                                    Buffers: shared hit=13721 read=28423, temp read=53397 written=69282
+                                                    ->  Sort  (cost=198445.36..199234.31 rows=315577 width=28) (actual time=826.187..886.493 rows=930166 loops=3)
+                                                          Sort Key: fct_trips.user_id, fct_trips.start_date
+                                                          Sort Method: external merge  Disk: 39704kB
+                                                          Buffers: shared hit=13721 read=28423, temp read=53397 written=69282
+                                                          Worker 0:  Sort Method: external merge  Disk: 37752kB
+                                                          Worker 1:  Sort Method: external merge  Disk: 37536kB
+                                                          ->  Partial HashAggregate  (cost=146071.52..162068.14 rows=315577 width=28) (actual time=283.859..586.229 rows=930166 loops=3)
+                                                                Group Key: fct_trips.user_id, fct_trips.start_date
+                                                                Planned Partitions: 8  Batches: 41  Memory Usage: 8273kB  Disk Usage: 48536kB
+                                                                Buffers: shared hit=13689 read=28423, temp read=24684 written=40514
+                                                                Worker 0:  Batches: 41  Memory Usage: 8273kB  Disk Usage: 48160kB
+                                                                Worker 1:  Batches: 41  Memory Usage: 8273kB  Disk Usage: 48160kB
+                                                                ->  Parallel Seq Scan on fct_trips  (cost=0.00..55261.03 rows=1314903 width=16) (actual time=0.014..62.666 rows=1051928 loops=3)
+                                                                      Buffers: shared hit=13689 read=28423
+  ->  Nested Loop  (cost=4597.46..4834.56 rows=112 width=172) (actual time=2091.913..2092.092 rows=20 loops=1)
+        Buffers: shared hit=20915 read=9947, temp read=20084 written=25384
+        ->  Nested Loop  (cost=4597.03..4655.19 rows=112 width=110) (actual time=2091.901..2092.038 rows=20 loops=1)
+              Buffers: shared hit=20835 read=9947, temp read=20084 written=25384
+              ->  Merge Join  (cost=4596.75..4617.49 rows=112 width=104) (actual time=2091.893..2092.014 rows=20 loops=1)
+                    Merge Cond: (top_usuarios.user_id = viaje.user_id)
+                    Buffers: shared hit=20775 read=9947, temp read=20084 written=25384
+                    ->  Sort  (cost=0.83..0.88 rows=20 width=88) (actual time=2081.942..2081.943 rows=20 loops=1)
+                          Sort Key: top_usuarios.user_id
+                          Sort Method: quicksort  Memory: 26kB
+                          Buffers: shared hit=4732 read=9947, temp read=20084 written=25384
+                          ->  CTE Scan on top_usuarios  (cost=0.00..0.40 rows=20 width=88) (actual time=2081.934..2081.938 rows=20 loops=1)
+                                Buffers: shared hit=4732 read=9947, temp read=20084 written=25384
+                    ->  Unique  (cost=4595.92..4601.50 rows=1115 width=24) (actual time=9.944..10.058 rows=20 loops=1)
+                          Buffers: shared hit=16043
+                          ->  Sort  (cost=4595.92..4598.71 rows=1115 width=24) (actual time=9.943..9.988 rows=1549 loops=1)
+                                Sort Key: viaje.user_id, (count(*)) DESC, viaje.origin_station_id
+                                Sort Method: quicksort  Memory: 125kB
+                                Buffers: shared hit=16043
+                                ->  HashAggregate  (cost=4528.34..4539.49 rows=1115 width=24) (actual time=9.518..9.619 rows=1641 loops=1)
+                                      Group Key: viaje.user_id, viaje.origin_station_id
+                                      Batches: 1  Memory Usage: 193kB
+                                      Buffers: shared hit=16043
+                                      ->  Nested Loop  (cost=0.43..4519.97 rows=1115 width=16) (actual time=0.025..7.880 rows=16051 loops=1)
+                                            Buffers: shared hit=16043
+                                            ->  CTE Scan on top_usuarios top_usuarios_1  (cost=0.00..0.40 rows=20 width=8) (actual time=0.000..0.003 rows=20 loops=1)
+                                            ->  Index Scan using "26f8898af1f4a40748866f6a4a36b775" on fct_trips viaje  (cost=0.43..225.42 rows=56 width=16) (actual time=0.003..0.323 rows=803 loops=20)
+                                                  Index Cond: (user_id = top_usuarios_1.user_id)
+                                                  Buffers: shared hit=16043
+              ->  Index Scan using "174866d0e70a6e0df4f354a0acda9c34" on dim_station estacion  (cost=0.27..0.34 rows=1 width=22) (actual time=0.001..0.001 rows=1 loops=20)
+                    Index Cond: (station_id = viaje.origin_station_id)
+                    Buffers: shared hit=60
+        ->  Memoize  (cost=0.43..8.45 rows=1 width=15) (actual time=0.002..0.002 rows=1 loops=20)
+              Cache Key: top_usuarios.user_id
+              Cache Mode: logical
+              Hits: 0  Misses: 20  Evictions: 0  Overflows: 0  Memory Usage: 3kB
+              Buffers: shared hit=80
+              ->  Index Scan using "565c05d51c82a20fdff73b65e86e8889" on dim_user usuario  (cost=0.42..8.44 rows=1 width=15) (actual time=0.002..0.002 rows=1 loops=20)
+                    Index Cond: (user_id = top_usuarios.user_id)
+                    Buffers: shared hit=80
+Planning:
+  Buffers: shared hit=2
+Planning Time: 0.228 ms
+JIT:
+  Functions: 75
+  Options: Inlining false, Optimization false, Expressions true, Deforming true
+  Timing: Generation 2.409 ms, Inlining 0.000 ms, Optimization 1.438 ms, Emission 28.656 ms, Total 32.503 ms
+Execution Time: 2098.091 ms

@@ -1,0 +1,57 @@
+-- sql/optimization/dashboard.sql: La misma consulta sin el agregado, directo sobre fct_trips: lo que costaría sin
+
+select
+    origin.station_name as origin_station_name,
+    destination.station_name as destination_station_name,
+    count(*) as trips,
+    percentile_cont(0.5) within group (order by trip.duration_minutes) as median_duration_minutes
+from gold.fct_trips as trip
+inner join gold.dim_station as origin
+    on trip.origin_station_id = origin.station_id
+inner join gold.dim_station as destination
+    on trip.destination_station_id = destination.station_id
+where trip.start_date >= date '2025-03-01' and trip.start_date < date '2025-04-01'
+group by origin.station_name, destination.station_name
+order by trips desc
+limit 20;
+
+Limit  (cost=96346.02..96346.07 rows=20 width=44) (actual time=464.181..464.185 rows=20 loops=1)
+  Buffers: shared hit=4182, temp read=1663 written=1669
+  ->  Sort  (cost=96346.02..96770.38 rows=169744 width=44) (actual time=464.180..464.183 rows=20 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=4182, temp read=1663 written=1669
+        ->  GroupAggregate  (cost=85433.79..91829.20 rows=169744 width=44) (actual time=323.077..459.998 rows=47953 loops=1)
+              Group Key: origin.station_name, destination.station_name
+              Buffers: shared hit=4182, temp read=1663 written=1669
+              ->  Sort  (cost=85433.79..86146.06 rows=284907 width=34) (actual time=323.049..383.920 rows=288769 loops=1)
+                    Sort Key: origin.station_name, destination.station_name
+                    Sort Method: external merge  Disk: 13304kB
+                    Buffers: shared hit=4182, temp read=1663 written=1669
+                    ->  Hash Join  (cost=3933.31..51830.03 rows=284907 width=34) (actual time=3.530..82.696 rows=288769 loops=1)
+                          Hash Cond: (trip.destination_station_id = destination.station_id)
+                          Buffers: shared hit=4182
+                          ->  Hash Join  (cost=3915.02..51056.18 rows=284907 width=28) (actual time=3.465..56.522 rows=288769 loops=1)
+                                Hash Cond: (trip.origin_station_id = origin.station_id)
+                                Buffers: shared hit=4173
+                                ->  Bitmap Heap Scan on fct_trips trip  (cost=3896.73..50282.33 rows=284907 width=22) (actual time=3.412..22.778 rows=288769 loops=1)
+                                      Recheck Cond: ((start_date >= '2025-03-01'::date) AND (start_date < '2025-04-01'::date))
+                                      Heap Blocks: exact=3916
+                                      Buffers: shared hit=4164
+                                      ->  Bitmap Index Scan on fe03305470d86366a047853d9869cef0  (cost=0.00..3825.50 rows=284907 width=0) (actual time=3.079..3.079 rows=288769 loops=1)
+                                            Index Cond: ((start_date >= '2025-03-01'::date) AND (start_date < '2025-04-01'::date))
+                                            Buffers: shared hit=248
+                                ->  Hash  (cost=13.13..13.13 rows=413 width=22) (actual time=0.050..0.051 rows=413 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 32kB
+                                      Buffers: shared hit=9
+                                      ->  Seq Scan on dim_station origin  (cost=0.00..13.13 rows=413 width=22) (actual time=0.001..0.024 rows=413 loops=1)
+                                            Buffers: shared hit=9
+                          ->  Hash  (cost=13.13..13.13 rows=413 width=22) (actual time=0.063..0.063 rows=413 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 32kB
+                                Buffers: shared hit=9
+                                ->  Seq Scan on dim_station destination  (cost=0.00..13.13 rows=413 width=22) (actual time=0.003..0.032 rows=413 loops=1)
+                                      Buffers: shared hit=9
+Planning:
+  Buffers: shared hit=32
+Planning Time: 0.193 ms
+Execution Time: 464.751 ms

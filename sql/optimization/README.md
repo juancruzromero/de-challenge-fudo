@@ -21,55 +21,73 @@ make bench label=x skip_dbt=1 only=q6        # solo consultas, filtradas por nom
 ```
 
 - **Repeticiones:** cada sentencia corre una vez para calentar la caché y después 5 veces con `EXPLAIN (ANALYZE, BUFFERS)`. Se informa la mediana.
-- **Estadísticas:** el benchmark espera a que las tablas grandes de gold las tengan. dbt no las calcula, y sin ellas el planner estima a ciegas (ver hallazgo 1).
-- **Entorno:** el Postgres del `docker compose` con la configuración por defecto de la imagen, en una laptop (Apple Silicon, Docker Desktop). Lo que vale son las diferencias relativas, no los milisegundos absolutos.
+- **Estadísticas:** el benchmark espera a que las tablas grandes de gold las tengan antes de medir. Hasta T6.2, dbt no las calculaba (hallazgo 1).
+- **Entorno:** el Postgres del `docker compose`, con la configuración por defecto de la imagen, en una laptop (Apple Silicon, Docker Desktop con 6 GB). Lo que vale son las diferencias relativas, no los milisegundos absolutos.
+- **Costo de medir:** `EXPLAIN ANALYZE` cronometra cada nodo del plan y eso suma entre 20 y 30 % en Q5 y Q6. Por ejemplo, Q6 da 2,1 s en el benchmark y 1,7 s ejecutada directo. Antes y después se miden igual, así que la comparación vale.
 
 | Archivo | Qué es |
 |---|---|
 | [`dashboard.sql`](dashboard.sql) | Consultas representativas del dashboard (T7.2), con su nombre en `-- name:`. |
-| [`baseline.md`](baseline.md) | Medición inicial: generada, no editar a mano. |
+| [`baseline.md`](baseline.md) · [`after.md`](after.md) | Medición inicial (T6.1) y final (T6.2): generadas, no editar a mano. |
 | `plans/<label>/` | Plan completo de cada consulta (`EXPLAIN ANALYZE` en texto), para comparar con diff. |
 | `results/<label>.json` | Datos crudos de cada medición: el input de las comparaciones. |
 
-## Línea de base (T6.1)
+## Resultado
 
-Resumen de [`baseline.md`](baseline.md):
+Detalle en [`after.md`](after.md). Los datos no cambian: comparé con `EXCEPT ALL` en los dos sentidos cada mart, `silver.stations`, los rechazados, la reconciliación, `dim_station`, `dim_user` y `agg_station_od_monthly`, y con conteo más hash `silver.trips` y `fct_trips`. Todo dio idéntico.
 
-| Qué | Tiempo | Comentario |
-|---|--:|---|
-| Build de dbt (`dbt run`) | 77 s | `trips` + `trips_rejected` 58 s, `stations` 20 s, `mart_q6` 13 s |
-| Consultas del dashboard (sobre `agg_station_od_monthly`) | 1–215 ms | Todas cumplen NFR-07 (< 2 s) |
-| Top OD de un mes **sin** el agregado (sobre `fct_trips`) | 577 ms | 47× más lenta que con el agregado (12 ms) |
-| Q1–Q4 | 0,3–0,9 s | Escaneo completo de `fct_trips` (3,1 M filas) |
-| Q5 | 2,5–2,9 s | Percentiles: ordenan 3,1 M filas, no se paralelizan |
-| Q6 | **12,5 s** | La peor, por lejos |
+| Qué | Antes | Después | |
+|---|--:|--:|--:|
+| Build de dbt (`dbt run`, tiempo de pared) | 63,6 s | 45,2 s | **−29 %** |
+| Q6, usuarios más activos | 11.468 ms | 2.107 ms | **5,4×** |
+| Q6, buffers leídos | 9,4 M | 58 mil | **160× menos** |
+| Q5, duración por tramo de distancia | 2.498 ms | 1.700 ms | 1,5× |
+| Q1–Q4, Q5 por modelo, dashboard | | | ≈ igual (±10 %) |
+| Espera a las estadísticas después del build | 55 s | 0 s | |
 
-## Diagnóstico
+| Modelo de dbt | Antes | Después |
+|---|--:|--:|
+| `trips` + `trips_rejected` | 26,7 + 24,2 s | 24,6 s (`trips_validated`) + 2,9 + 0,4 s |
+| `stations` | 15,7 s | 4,4 s |
+| `mart_q6_top_users` | 11,5 s | 1,2 s (+ 3,7 s de `int_user_trips`, que comparten Q3, Q4 y Q6) |
 
-Hipótesis para T6.2, sacadas de los planes de `plans/baseline/`:
+## Qué se cambió
 
-1. **Las tablas de dbt nacen sin estadísticas.** dbt crea cada tabla con `CREATE TABLE AS` y no ejecuta `ANALYZE`.
-   - **Tablas grandes:** después de un build hubo que esperar **65 s** a que el autovacuum analizara `fct_trips` y `agg_station_od_monthly`.
-   - **Tablas chicas:** los marts y `dim_bike_model` no llegan al umbral del autovacuum (50 filas + 10 %), así que no se analizan nunca.
-   - **Consecuencia:** hasta entonces, Metabase consulta con estimaciones por defecto.
-   - **Impacto medido hoy: bajo.** La primera medición, con Q1–Q5 todavía sin estadísticas, dio tiempos parecidos a la segunda. Estas consultas recorren la tabla completa y el plan casi no depende de las estimaciones. El riesgo está en las consultas con filtros, donde una mala estimación cambia el plan.
-   - **Propuesta:** `analyze` como post-hook de cada tabla. Con eso, cada build deja el modelo listo para consultar.
-2. **Q6: la agregación por usuario se calcula 3 veces y con lecturas aleatorias.** La agregación de 3,1 M viajes queda debajo de un `Hash` dentro de un `Gather`, y la arman por separado el proceso principal y los 2 workers (`loops=3`).
-   - **Lectura aleatoria:** como `count(distinct)` y `mode()` piden entrada ordenada, el planner recorre `fct_trips` por el índice de `user_id`. La tabla no está ordenada por usuario, así que cada fila es una lectura aleatoria del heap.
-   - **Costo:** 9,4 M de buffers (47 GB de caché y 25 GB de disco) para una tabla de 329 MB.
-   - **Mismo patrón:** `mart_q6_top_users` lo repite en el build (13 s).
-   - **Propuestas, a medir:** materializar la agregación por usuario, ordenar `fct_trips` físicamente, o reescribir para que agregue con un solo escaneo secuencial.
-3. **`work_mem` de 4 MB: los ordenamientos van a disco.**
-   - **Ordenamientos a disco** (`external merge`): Q3, Q4 y Q5 escriben de 55 a 266 MB a temporales, y el mapa de estaciones (`d4`) 33 MB.
-   - **Hashes partidos:** se dividen en lotes (`Batches: 4`).
-   - **Configuración:** el contenedor usa los valores de fábrica (`shared_buffers` 128 MB). La tabla de hechos sola ocupa 486 MB con índices.
-   - **Propuesta:** subir `work_mem` y `shared_buffers` con `command:` en el compose, de forma acotada para una laptop.
-4. **Silver: `trips_validated` se calcula dos veces.** Es efímero, así que `trips` (30 s) y `trips_rejected` (27 s) repiten cada uno la limpieza completa de bronze: regex sobre 3,1 M filas y una ventana para detectar duplicados.
-   - **Propuesta:** materializarlo una sola vez. Es una tabla intermedia, y la regla "views solo sobre bronze" se respeta.
-5. **`stations` (20 s) lee bronze.trips completo dos veces**, una por el origen y otra por el destino. Lo hace para encontrar 6 estaciones que faltan en el catálogo.
-   - **Propuesta:** filtrar primero los ID que no están en el catálogo y recién después limpiar texto y coordenadas.
-6. **Q5: los percentiles no se paralelizan.** Los agregados ordenados (`percentile_cont`) corren en un solo proceso: ordenan 3,1 M filas con 4 MB de `work_mem`.
-   - **Plan:** recorre los 2 modelos por índice y repite el join contra una copia materializada de `fct_trips` (nested loop). Ya probé que no es un problema de estadísticas: con `dim_bike_model` analizada el plan es el mismo.
-   - **Lo que se puede mejorar:** la memoria (punto 3) y la duración guardada como entero en minutos×100, para ordenar más barato. Hay que medir si alguno de los dos cambia algo.
-7. **Sin margen en el dashboard.** Todas sus consultas leen el agregado y tardan como mucho 215 ms. El agregado ya es la optimización principal: 47× contra `fct_trips`.
-   - **Particionado mensual de `fct_trips`:** con 3,1 M filas y consultas que recorren el año completo, no reduciría lo que se lee. Se evalúa en T6.2, pero la hipótesis es que no conviene.
+1. **`vacuum (analyze, parallel 0)` como post-hook** de cada tabla de silver y gold ([`dbt_project.yml`](../../dbt/dbt_project.yml)).
+   - **Por qué `vacuum` y no solo `analyze`:** mi primera versión hacía solo `analyze`, y Q1/Q2 pasaron de `Index Only Scan` a `Seq Scan`, entre 5 y 20 % más lentas. Un index-only scan necesita el visibility map, y eso lo arma `VACUUM`, no `ANALYZE`. La medición base lo tenía porque había pasado el autovacuum.
+   - **Por qué `transaction: false`:** `VACUUM` no puede correr dentro de una transacción.
+   - **Por qué `parallel 0`:** el vacuum paralelo de índices pide memoria compartida, y en `fct_trips` superaba los 64 MB de `/dev/shm` que Docker da por defecto. El build fallaba. En una tabla recién creada no hay tuplas muertas, así que el paralelismo no aporta nada.
+   - **Resultado:** cada build deja todas las tablas listas para consultar, incluidas las chicas, que el autovacuum nunca analizaba. En Q5 por tramo, `dim_bike_model` con estadísticas cambia el plan: 1,5×.
+2. **Q6 sin `count(distinct)` ni `mode()`** ([`q6_usuarios_mas_activos.sql`](../analysis/q6_usuarios_mas_activos.sql)).
+   - **Cómo:** agrega en dos pasos, primero usuario × día y después usuario. La estación favorita sale de un conteo con `distinct on`, solo para el top. Así la agregación son hashes sobre un escaneo secuencial.
+   - **Resultado:** idéntico a la consulta original, con los mismos desempates.
+3. **`int_user_trips` materializado y con la misma agregación en dos pasos** ([`int_user_trips.sql`](../../dbt/models/gold/marts/int_user_trips.sql)). Era efímero y cada mart de Q3, Q4 y Q6 lo recalculaba con el plan malo de Q6.
+4. **`trips_validated` materializado una sola vez** como tabla `unlogged`: es intermedia y se reconstruye en cada build, así que no necesita WAL. Antes `trips` y `trips_rejected` repetían la limpieza completa de bronze.
+5. **`stg_bronze__trip_stations` agrupa antes de limpiar.** Los 6,3 M extremos de viaje son solo 438 variantes distintas de estación. Se agrupan los valores crudos en un solo escaneo de bronze (origen y destino con `lateral values`), y la limpieza corre sobre esas pocas filas. `stations` bajó de 15,7 a 4,4 s.
+
+## Qué se probó y se descartó
+
+- **Reemplazar la ventana de duplicados de `trips_validated` por un `group by`: empeoró, de 24 a 38 s.**
+  - **Primer problema:** la vista de staging se inlinea, así que cada mención de una columna en el `CASE` vuelve a ejecutar su regex.
+  - **Segundo problema:** el hash de duplicados lo armaba cada worker por su cuenta.
+  - La subconsulta con ventana original evita las dos cosas, porque no se puede aplanar.
+- **Limpieza sin regex (`translate` en lugar de `~`): solo 15 % más rápida.**
+  - **Dónde está el costo:** el 90 % de los 24 s de `trips_validated` es la limpieza, que corre en un solo proceso. Las regex de `clean_id` cuestan 3,2 s por columna y hay 4; las de `clean_timestamp`, 3,5 s y hay 2.
+  - **Por qué se descartó:** la ganancia no justificaba cambiar macros ya probadas.
+- **Abaratar el paralelismo (`parallel_setup_cost` y `parallel_tuple_cost` en 0) para ese modelo: sin cambio, 24,9 s.** La proyección con la limpieza sigue arriba del `Gather`.
+- **Particionar `fct_trips` por mes: no conviene.** Lo probé con una copia particionada e indexada igual:
+
+  | Consulta | `fct_trips` | Particionada |
+  |---|--:|--:|
+  | Top origen-destino de un mes | 93 ms | 89 ms |
+  | Q1 (año completo) | 125 ms | 129 ms |
+  | Viajes de un usuario | 0,23 ms | 0,39 ms |
+
+  - **Consultas de un mes:** el índice por `start_date` ya lee solo ese mes, así que podar particiones no agrega nada.
+  - **Consultas del año completo:** leen todas las particiones igual.
+  - **Búsquedas por usuario:** empeoran, porque buscan en el índice de cada una de las 12 particiones.
+  - **Cuándo convendría:** con varios años de datos, o para borrar o recargar meses enteros.
+  - **Para el dashboard:** el agregado `agg_station_od_monthly` sigue siendo la optimización que más rinde, 42× contra `fct_trips` (11 ms contra 466 ms).
+- **Configuración de memoria de Postgres** (`shared_buffers` y `work_mem`, con `command:` en el compose): quedó fuera de alcance por decisión del proyecto, que mantiene los valores de fábrica de la imagen.
+  - **Lo que se gana sin tocarla:** Docker Desktop pasó de 2 a 6 GB, y eso solo bajó el build de 77 a 64 s (la base de esta comparación).
+  - **Lo que queda pendiente:** Q3, Q4, Q5 y Q6 siguen escribiendo de 55 a 550 MB a temporales con `work_mem` de 4 MB. Es la mejora que más rinde si se habilita.

@@ -1,0 +1,23 @@
+-- sql/optimization/dashboard.sql: Destinos de una estación, mes a mes (detalle de una estación).
+
+select
+    month_start,
+    destination_station_name,
+    trips
+from gold.agg_station_od_monthly
+where origin_station_id = 14
+order by month_start, trips desc;
+
+Sort  (cost=6453.85..6460.11 rows=2501 width=26) (actual time=0.827..0.898 rows=2533 loops=1)
+  Sort Key: month_start, trips DESC
+  Sort Method: quicksort  Memory: 231kB
+  Buffers: shared hit=74
+  ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=31.81..6312.69 rows=2501 width=26) (actual time=0.025..0.322 rows=2533 loops=1)
+        Recheck Cond: (origin_station_id = 14)
+        Heap Blocks: exact=69
+        Buffers: shared hit=74
+        ->  Bitmap Index Scan on "24f8a484eb8774f6d02dde2766bacbaf"  (cost=0.00..31.18 rows=2501 width=0) (actual time=0.022..0.022 rows=2533 loops=1)
+              Index Cond: (origin_station_id = 14)
+              Buffers: shared hit=5
+Planning Time: 0.017 ms
+Execution Time: 0.959 ms

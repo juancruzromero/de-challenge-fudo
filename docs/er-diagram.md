@@ -111,6 +111,7 @@ Todas las claves foráneas tienen un test de `relationships` en dbt, y `fct_trip
 | Tabla | Grano | Para qué |
 |---|---|---|
 | `agg_station_od_monthly` | mes × estación de origen × estación de destino | Volumen de viajes entre estaciones a lo largo del año (dashboard). Trae nombres, comunas y coordenadas de las dos estaciones. |
+| `int_user_trips` | usuario | Viajes, duración y días activos de cada usuario de `dim_user` (incluye los de 0 viajes). Base de los marts de Q3, Q4 y Q6. |
 | `mart_q1_comunas_origin` | comuna | Q1: comunas de las que más viajes parten. |
 | `mart_q2_comunas_destination` | comuna | Q2: comunas que más viajes reciben. |
 | `mart_q3_trips_by_age_group` | rango etario | Q3: viajes por edad. |
@@ -144,7 +145,7 @@ flowchart LR
         s_comunas[comunas]
         s_stations[stations]
         s_users[users · users_rejected]
-        s_trips[trips · trips_rejected]
+        s_trips[trips_validated →<br/>trips · trips_rejected]
         s_recon[reconciliation]
     end
 
@@ -171,6 +172,7 @@ flowchart LR
     g_dims --> g_fct
     g_fct --> g_agg
     g_fct --> g_marts
+    g_dims --> g_marts
 
     g_agg --> mb[(Metabase)]
     g_marts --> mb
@@ -179,5 +181,7 @@ flowchart LR
 
 - `bronze.stations_legacy` no sigue a silver: el catálogo viejo reutiliza IDs de otras estaciones (ADR 002).
 - Las vistas de staging (`silver.stg_bronze__*`) tipan bronze. Son las únicas vistas del proyecto: silver y gold se materializan como tablas, porque dbt-postgres reemplaza tablas con `drop ... cascade` y se llevaría las vistas que dependen de ellas.
+- `silver.trips_validated` es una tabla intermedia (`unlogged`): limpia los viajes una sola vez y de ahí salen los válidos y los rechazados (T6.2).
+- Cada tabla de silver y gold se crea con `vacuum (analyze)` como post-hook, así queda lista para consultar al terminar el build (T6.2).
 - `silver.reconciliation` controla que bronze = silver + rechazados en cada entidad.
 - Metabase se conecta con `bi_reader`, que solo puede leer `gold`.

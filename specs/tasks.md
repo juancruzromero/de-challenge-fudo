@@ -91,9 +91,9 @@
   - Commit: `docs: add ER diagram and dbt docs`
 
 ## Fase 6 — Optimización SQL (extra)
-- [~] **T6.1** `EXPLAIN ANALYZE` baseline de Q1–Q6 y del OD → `sql/optimization/baseline.md`. `make bench` (`ecobici-benchmark`) mide consultas y build de dbt y guarda planes y JSON para comparar; diagnóstico en `sql/optimization/README.md`.
+- [x] **T6.1** `EXPLAIN ANALYZE` baseline de Q1–Q6 y del OD → `sql/optimization/baseline.md`. `make bench` (`ecobici-benchmark`) mide consultas y build de dbt y guarda planes y JSON para comparar; diagnóstico en `sql/optimization/README.md`.
   - Commit: `perf(sql): capture query baselines`
-- [ ] **T6.2** Índices (post-hooks dbt) y particionado mensual de `fct_trips` o agregados materializados; medición después.
+- [~] **T6.2** Índices (post-hooks dbt) y particionado mensual de `fct_trips` o agregados materializados; medición después. Hecho: `vacuum (analyze)` como post-hook, Q6 e `int_user_trips` sin `count(distinct)`/`mode()`, `trips_validated` e `int_user_trips` materializados, `stations` agrupa antes de limpiar. Particionado medido y descartado. Build −29 %, Q6 5,4× (`sql/optimization/after.md`).
   - Aceptación: mejora documentada antes/después. (EX-01)
   - Commit: `perf(db): add indexes and partitioning to gold`
 

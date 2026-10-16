@@ -1,0 +1,32 @@
+-- sql/optimization/dashboard.sql: Evolución mensual de viajes (serie de tiempo del dashboard).
+
+select
+    month_start,
+    sum(trips) as trips
+from gold.agg_station_od_monthly
+group by month_start
+order by month_start;
+
+Finalize GroupAggregate  (cost=17278.06..17281.19 rows=12 width=36) (actual time=41.820..43.294 rows=12 loops=1)
+  Group Key: month_start
+  Buffers: shared hit=3882 read=9062
+  ->  Gather Merge  (cost=17278.06..17280.86 rows=24 width=36) (actual time=41.816..43.283 rows=36 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=3882 read=9062
+        ->  Sort  (cost=16278.03..16278.06 rows=12 width=36) (actual time=35.654..35.655 rows=12 loops=3)
+              Sort Key: month_start
+              Sort Method: quicksort  Memory: 25kB
+              Buffers: shared hit=3882 read=9062
+              Worker 0:  Sort Method: quicksort  Memory: 25kB
+              Worker 1:  Sort Method: quicksort  Memory: 25kB
+              ->  Partial HashAggregate  (cost=16277.67..16277.82 rows=12 width=36) (actual time=35.645..35.646 rows=12 loops=3)
+                    Group Key: month_start
+                    Batches: 1  Memory Usage: 24kB
+                    Buffers: shared hit=3866 read=9062
+                    Worker 0:  Batches: 1  Memory Usage: 24kB
+                    Worker 1:  Batches: 1  Memory Usage: 24kB
+                    ->  Parallel Seq Scan on agg_station_od_monthly  (cost=0.00..15161.11 rows=223311 width=12) (actual time=0.007..12.198 rows=178649 loops=3)
+                          Buffers: shared hit=3866 read=9062
+Planning Time: 0.038 ms
+Execution Time: 43.324 ms

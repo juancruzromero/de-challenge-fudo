@@ -1,0 +1,72 @@
+-- sql/analysis/q4_fecha_alta_vs_viajes.sql: Q4: ¿Qué relación hay entre la cantidad de viajes y la fecha de alta de los usuarios?
+
+with usuarios as (
+    select
+        usuario.user_id,
+        usuario.signup_month,
+        usuario.signup_year,
+        count(viaje.trip_id) as viajes,
+        date '2025-12-31' - greatest(usuario.signup_date, date '2025-01-01') + 1
+            as dias_de_exposicion
+    from gold.dim_user as usuario
+    left join gold.fct_trips as viaje
+        on usuario.user_id = viaje.user_id
+    where usuario.has_profile
+    group by usuario.user_id, usuario.signup_month, usuario.signup_year, usuario.signup_date
+)
+select
+    to_char(signup_month, 'YYYY-MM') as mes_de_alta,
+    count(*) as usuarios,
+    round(100.0 * count(*) filter (where viajes > 0) / count(*), 1) as pct_usuarios_activos,
+    sum(viajes) as viajes,
+    round(sum(viajes)::numeric / count(*), 2) as viajes_por_usuario,
+    round(avg(dias_de_exposicion), 0) as dias_de_exposicion_promedio,
+    round(30.0 * sum(viajes) / sum(dias_de_exposicion), 2) as viajes_cada_30_dias
+from usuarios
+group by signup_month
+order by signup_month;
+
+Sort  (cost=350465.79..350466.29 rows=200 width=204) (actual time=721.501..729.512 rows=24 loops=1)
+  Sort Key: usuario.signup_month
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+  ->  HashAggregate  (cost=350447.64..350458.14 rows=200 width=204) (actual time=721.469..729.504 rows=24 loops=1)
+        Group Key: usuario.signup_month
+        Batches: 1  Memory Usage: 40kB
+        Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+        ->  Finalize GroupAggregate  (cost=213724.85..339745.74 rows=389160 width=32) (actual time=450.029..685.376 rows=389751 loops=1)
+              Group Key: usuario.user_id, usuario.signup_month, usuario.signup_year, usuario.signup_date
+              Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+              ->  Gather Merge  (cost=213724.85..323206.44 rows=778320 width=28) (actual time=450.019..607.945 rows=429905 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+                    ->  Partial GroupAggregate  (cost=212724.83..232368.98 rows=389160 width=28) (actual time=434.979..548.173 rows=143302 loops=3)
+                          Group Key: usuario.user_id, usuario.signup_month, usuario.signup_year, usuario.signup_date
+                          Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+                          ->  Sort  (cost=212724.83..215350.25 rows=1050170 width=28) (actual time=434.956..482.775 rows=582755 loops=3)
+                                Sort Key: usuario.user_id, usuario.signup_month, usuario.signup_year, usuario.signup_date
+                                Sort Method: external merge  Disk: 22688kB
+                                Buffers: shared hit=6517 read=40813, temp read=24024 written=24093
+                                Worker 0:  Sort Method: external merge  Disk: 22880kB
+                                Worker 1:  Sort Method: external merge  Disk: 24152kB
+                                ->  Parallel Hash Right Join  (cost=10064.13..82569.82 rows=1050170 width=28) (actual time=208.412..336.199 rows=582755 loops=3)
+                                      Hash Cond: (viaje.user_id = usuario.user_id)
+                                      Buffers: shared hit=6373 read=40813, temp read=15309 written=15344
+                                      ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55261.03 rows=1314903 width=16) (actual time=0.021..92.624 rows=1051928 loops=3)
+                                            Buffers: shared hit=2908 read=39204
+                                      ->  Parallel Hash  (cost=7086.26..7086.26 rows=162150 width=20) (actual time=34.545..34.545 rows=129917 loops=3)
+                                            Buckets: 131072  Batches: 4  Memory Usage: 6432kB
+                                            Buffers: shared hit=3447 read=1609, temp written=1448
+                                            ->  Parallel Seq Scan on dim_user usuario  (cost=0.00..7086.26 rows=162150 width=20) (actual time=6.960..22.332 rows=129917 loops=3)
+                                                  Filter: has_profile
+                                                  Rows Removed by Filter: 32504
+                                                  Buffers: shared hit=3447 read=1609
+Planning:
+  Buffers: shared hit=19
+Planning Time: 0.184 ms
+JIT:
+  Functions: 58
+  Options: Inlining false, Optimization false, Expressions true, Deforming true
+  Timing: Generation 1.397 ms, Inlining 0.000 ms, Optimization 0.826 ms, Emission 20.148 ms, Total 22.371 ms
+Execution Time: 731.456 ms

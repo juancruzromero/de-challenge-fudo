@@ -1,0 +1,41 @@
+-- sql/analysis/q5_duracion_vs_modelo.sql: Q5: ¿Qué relación hay entre la duración de los viajes y el modelo de bicicleta?
+
+select
+    modelo.bike_model as modelo,
+    count(*) as viajes,
+    round(avg(viaje.duration_minutes), 2) as duracion_media_min,
+    round((percentile_cont(0.25) within group (order by viaje.duration_minutes))::numeric, 2)
+        as p25_min,
+    round((percentile_cont(0.5) within group (order by viaje.duration_minutes))::numeric, 2)
+        as mediana_min,
+    round((percentile_cont(0.75) within group (order by viaje.duration_minutes))::numeric, 2)
+        as p75_min,
+    round((percentile_cont(0.9) within group (order by viaje.duration_minutes))::numeric, 2)
+        as p90_min
+from gold.fct_trips as viaje
+inner join gold.dim_bike_model as modelo
+    on viaje.bike_model_id = modelo.bike_model_id
+group by modelo.bike_model
+order by modelo.bike_model;
+
+GroupAggregate  (cost=0.13..240347.49 rows=2 width=173) (actual time=1642.479..2301.059 rows=2 loops=1)
+  Group Key: modelo.bike_model
+  Buffers: shared hit=3870 read=38244, temp read=28712 written=20080
+  ->  Nested Loop  (cost=0.13..200900.30 rows=3155768 width=11) (actual time=4.188..1241.441 rows=3155783 loops=1)
+        Join Filter: (modelo.bike_model_id = viaje.bike_model_id)
+        Rows Removed by Join Filter: 3155783
+        Buffers: shared hit=3870 read=38244, temp read=7692 written=7692
+        ->  Index Scan using c62a358ffc19fba82e8a1b989e491260 on dim_bike_model modelo  (cost=0.13..12.16 rows=2 width=7) (actual time=0.003..0.008 rows=2 loops=1)
+              Buffers: shared hit=2
+        ->  Materialize  (cost=0.00..101776.52 rows=3155768 width=8) (actual time=2.092..427.995 rows=3155783 loops=2)
+              Buffers: shared hit=3868 read=38244, temp read=7692 written=7692
+              ->  Seq Scan on fct_trips viaje  (cost=0.00..73669.68 rows=3155768 width=8) (actual time=4.176..327.871 rows=3155783 loops=1)
+                    Buffers: shared hit=3868 read=38244
+Planning:
+  Buffers: shared hit=12
+Planning Time: 0.105 ms
+JIT:
+  Functions: 15
+  Options: Inlining false, Optimization false, Expressions true, Deforming true
+  Timing: Generation 0.351 ms, Inlining 0.000 ms, Optimization 0.185 ms, Emission 4.038 ms, Total 4.574 ms
+Execution Time: 2305.069 ms
