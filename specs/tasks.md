@@ -51,9 +51,9 @@
   - Commit: `build: add Makefile entrypoints`
 
 ## Fase 3 — Bronze (Python)
-- [~] **T3.1** `config.py` (settings por env, validados al arrancar, contraseña fuera del `repr`) y `log.py` (logging estructurado JSON/texto + `stage()` con duración por etapa).
+- [x] **T3.1** `config.py` (settings por env, validados al arrancar, contraseña fuera del `repr`) y `log.py` (logging estructurado JSON/texto + `stage()` con duración por etapa).
   - Commit: `feat(etl): add config and logging`
-- [ ] **T3.2** `extract.py`: mapeo archivo → tabla bronze (`trips`, `users_2024`, `users_2025`, `stations`, `stations_legacy`, `comunas`), quitar BOM, normalizar headers a snake_case (FR-01b), hash SHA-256 por archivo.
+- [~] **T3.2** `extract.py`: mapeo archivo → tabla bronze (`trips`, `users_2024`, `users_2025`, `stations`, `stations_legacy`, `comunas`), quitar BOM, normalizar headers a snake_case (FR-01b), hash SHA-256 por archivo.
   - Aceptación: tests de normalización (`ID Cliente` → `id_cliente`, `género` → `genero`, BOM).
   - Commit: `feat(etl): discover input files and normalize headers`
 - [ ] **T3.3** `load_bronze.py`: crea tabla TEXT según header, `COPY` con columnas de metadatos, `bronze._column_mapping`, registro en `bronze._ingestion_log`, skip si el hash ya fue cargado; el GeoJSON se carga como una fila por comuna con la geometría en TEXT. (FR-01..03)
