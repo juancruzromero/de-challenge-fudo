@@ -1,8 +1,9 @@
-"""Provisión de Metabase por API (T7.1).
+"""Provisión de Metabase por API (T7.1 y T7.2).
 
 Deja Metabase listo sin pasos manuales: crea el usuario admin (si la instancia está sin
 configurar), quita el contenido de ejemplo, conecta la base analítica como `bi_reader` mostrando
-solo el schema gold, y espera a que Metabase sincronice las tablas. Es idempotente: se puede
+solo el schema gold, espera a que Metabase sincronice las tablas y crea las preguntas y el
+dashboard definidos en dashboard.py, que queda como página de inicio. Es idempotente: se puede
 correr las veces que haga falta.
 
 Solo usa la librería estándar, para correr en una imagen de Python sin instalar nada.
@@ -21,6 +22,8 @@ import urllib.error
 import urllib.request
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+
+import dashboard
 
 log = logging.getLogger("provision")
 
@@ -193,9 +196,7 @@ def database_payload(settings: Settings) -> dict:
 
 
 def list_databases(client: MetabaseClient) -> list[dict]:
-    response = client.get("/api/database")
-    # Según la versión, la API devuelve la lista directa o envuelta en {"data": [...]}.
-    return response["data"] if isinstance(response, dict) else response
+    return items(client.get("/api/database"))
 
 
 def ensure_database(client: MetabaseClient, settings: Settings) -> int:
@@ -220,8 +221,7 @@ def remove_sample_content(client: MetabaseClient) -> None:
         if database.get("is_sample"):
             client.request("DELETE", f"/api/database/{database['id']}")
             log.info("Base de ejemplo '%s' eliminada", database["name"])
-    items = client.get("/api/collection/root/items?models=collection")
-    for item in items["data"] if isinstance(items, dict) else items:
+    for item in items(client.get("/api/collection/root/items?models=collection")):
         if item.get("name") == "Examples":
             client.put(f"/api/collection/{item['id']}", {"archived": True})
             log.info("Colección de ejemplo 'Examples' archivada")
@@ -249,6 +249,88 @@ def wait_for_sync(
         sleep(5)
 
 
+def items(response: object) -> list[dict]:
+    """Según el endpoint, la API devuelve la lista directa o envuelta en {"data": [...]}."""
+    return response["data"] if isinstance(response, dict) else response
+
+
+def ensure_collection(client: MetabaseClient) -> int:
+    for collection in items(client.get("/api/collection")):
+        if collection.get("name") == dashboard.COLLECTION_NAME and not collection.get("archived"):
+            return collection["id"]
+    created = client.post("/api/collection", {"name": dashboard.COLLECTION_NAME})
+    log.info("Colección '%s' creada", dashboard.COLLECTION_NAME)
+    return created["id"]
+
+
+def od_field_ids(client: MetabaseClient, database_id: int) -> dict[str, int]:
+    """IDs de las columnas del agregado OD que usan los filtros del dashboard."""
+    metadata = client.get(f"/api/database/{database_id}/metadata")
+    table = next(t for t in metadata["tables"] if t["name"] == dashboard.OD_TABLE)
+    return {f["name"]: f["id"] for f in table["fields"]}
+
+
+def collection_items(client: MetabaseClient, collection_id: int, model: str) -> dict[str, int]:
+    response = client.get(f"/api/collection/{collection_id}/items?models={model}")
+    return {item["name"]: item["id"] for item in items(response)}
+
+
+def ensure_cards(
+    client: MetabaseClient, database_id: int, collection_id: int, field_ids: dict[str, int]
+) -> dict[str, int]:
+    """Crea o actualiza cada pregunta de dashboard.py (por nombre) y archiva las que sobran."""
+    existing = collection_items(client, collection_id, "card")
+    card_ids = {}
+    for card in dashboard.CARDS:
+        payload = dashboard.card_payload(card, database_id, collection_id, field_ids)
+        if card.name in existing:
+            client.put(f"/api/card/{existing[card.name]}", payload)
+            card_ids[card.name] = existing[card.name]
+        else:
+            card_ids[card.name] = client.post("/api/card", payload)["id"]
+    for name, card_id in existing.items():
+        if name not in card_ids:
+            client.put(f"/api/card/{card_id}", {"archived": True})
+            log.info("Pregunta '%s' archivada: ya no está en dashboard.py", name)
+    log.info("%d preguntas listas en la colección '%s'", len(card_ids), dashboard.COLLECTION_NAME)
+    return card_ids
+
+
+def ensure_dashboard(client: MetabaseClient, collection_id: int, card_ids: dict[str, int]) -> int:
+    """Crea el dashboard si no existe y le define filtros, pestañas y tarjetas desde cero."""
+    existing = collection_items(client, collection_id, "dashboard")
+    dashboard_id = existing.get(dashboard.DASHBOARD_NAME)
+    if dashboard_id is None:
+        created = client.post(
+            "/api/dashboard",
+            {"name": dashboard.DASHBOARD_NAME, "collection_id": collection_id},
+        )
+        dashboard_id = created["id"]
+    # IDs negativos: Metabase reemplaza las pestañas y tarjetas anteriores por estas.
+    tab_ids = {dashboard.TAB_TRIPS: -1, dashboard.TAB_QUESTIONS: -2}
+    client.put(
+        f"/api/dashboard/{dashboard_id}",
+        {
+            "description": dashboard.DASHBOARD_DESCRIPTION,
+            "parameters": dashboard.dashboard_parameters(),
+            "tabs": [{"id": tab_id, "name": name} for name, tab_id in tab_ids.items()],
+            "dashcards": dashboard.dashcards_payload(card_ids, tab_ids),
+        },
+    )
+    log.info("Dashboard '%s' listo (id %s)", dashboard.DASHBOARD_NAME, dashboard_id)
+    return dashboard_id
+
+
+def configure_site(client: MetabaseClient, dashboard_id: int) -> None:
+    """El dashboard como página de inicio y números con formato es-AR (1.234,5)."""
+    client.put("/api/setting/custom-homepage", {"value": True})
+    client.put("/api/setting/custom-homepage-dashboard", {"value": dashboard_id})
+    client.put(
+        "/api/setting/custom-formatting",
+        {"value": {"type/Number": {"number_separators": ",."}}},
+    )
+
+
 def provision(client: MetabaseClient, settings: Settings) -> int:
     wait_until_healthy(client, settings.timeout_s)
     ensure_admin(client, settings)
@@ -256,7 +338,11 @@ def provision(client: MetabaseClient, settings: Settings) -> int:
     remove_sample_content(client)
     database_id = ensure_database(client, settings)
     wait_for_sync(client, database_id, settings.timeout_s)
-    return database_id
+    collection_id = ensure_collection(client)
+    card_ids = ensure_cards(client, database_id, collection_id, od_field_ids(client, database_id))
+    dashboard_id = ensure_dashboard(client, collection_id, card_ids)
+    configure_site(client, dashboard_id)
+    return dashboard_id
 
 
 def main() -> int:

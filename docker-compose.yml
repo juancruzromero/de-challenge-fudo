@@ -131,7 +131,8 @@ services:
       PYTHONUNBUFFERED: "1"
     volumes:
       - ./metabase:/app:ro
-    command: ["python", "-I", "/app/provision.py"]
+    # Sin -I: provision.py importa dashboard.py, que está al lado.
+    command: ["python", "/app/provision.py"]
 
 volumes:
   postgres-data:
