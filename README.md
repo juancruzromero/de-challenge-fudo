@@ -39,7 +39,7 @@ data/raw/*.csv ──► 🥉 bronze ──► 🥈 silver ──► 🥇 gold �
 
 ## 🚀 Quickstart
 
-> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS) y Metabase. La ingesta y el dashboard llegan en las próximas fases del [plan](specs/tasks.md).
+> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS), carga los datasets en bronze y levanta Metabase. Las capas silver/gold y el dashboard llegan en las próximas fases del [plan](specs/tasks.md).
 
 **Requisitos:** Docker y Docker Compose. Para desarrollo local, además [uv](https://docs.astral.sh/uv/).
 

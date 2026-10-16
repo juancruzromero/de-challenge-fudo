@@ -56,10 +56,10 @@
 - [x] **T3.2** `extract.py`: mapeo archivo → tabla bronze (`trips`, `users_2024`, `users_2025`, `stations`, `stations_legacy`, `comunas`), quitar BOM, normalizar headers a snake_case (FR-01b), hash SHA-256 por archivo.
   - Aceptación: tests de normalización (`ID Cliente` → `id_cliente`, `género` → `genero`, BOM).
   - Commit: `feat(etl): discover input files and normalize headers`
-- [~] **T3.3** `load_bronze.py` + comando `ecobici-ingest` (`--force`, `--only`): crea tabla TEXT según header, `COPY` con columnas de metadatos, `bronze._column_mapping`, registro en `bronze._ingestion_log`, skip si el hash ya fue cargado; el GeoJSON se carga como una fila por comuna con la geometría en TEXT. (FR-01..03)
+- [x] **T3.3** `load_bronze.py` + comando `ecobici-ingest` (`--force`, `--only`): crea tabla TEXT según header, `COPY` con columnas de metadatos, `bronze._column_mapping`, registro en `bronze._ingestion_log`, skip si el hash ya fue cargado; el GeoJSON se carga como una fila por comuna con la geometría en TEXT. (FR-01..03)
   - Aceptación: correr dos veces no duplica filas; conteos iguales a `spec.md §2`.
   - Commit: `feat(etl): load raw CSVs into bronze with COPY`
-- [ ] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build` + servicio `etl` en `docker-compose.yml` (one-shot, depende de `postgres` healthy; `metabase` espera `service_completed_successfully`).
+- [~] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build` + servicio `etl` en `docker-compose.yml` (one-shot, depende de `postgres` healthy; `metabase` espera `service_completed_successfully`).
   - Commit: `test(etl): add ingestion tests and container entrypoint`
 
 ## Fase 4 — Silver (dbt)

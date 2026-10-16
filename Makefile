@@ -84,8 +84,8 @@ setup: ## Instala el entorno local (uv) y los hooks de pre-commit
 	uv sync --project etl
 	$(UV) pre-commit install
 
-test: ## Corre los tests de Python
-	$(UV) pytest
+test: ## Corre los tests de Python (los de integración necesitan make up)
+	uv run --directory etl pytest $(args)
 
 lint: ## Corre todos los hooks de pre-commit (ruff, sqlfluff, ...)
 	$(UV) pre-commit run --all-files

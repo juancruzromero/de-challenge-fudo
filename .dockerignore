@@ -1,0 +1,12 @@
+# Contexto de build mínimo: los datos se montan como volumen, no se copian a la imagen.
+*
+!etl/pyproject.toml
+!etl/uv.lock
+!etl/.python-version
+!etl/src/**
+!etl/entrypoint.sh
+!dbt/**
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+**/__pycache__/
