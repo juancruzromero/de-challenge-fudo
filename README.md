@@ -141,7 +141,11 @@ select * from silver.reconciliation;   -- bronze = silver + rechazados, por enti
 - **Panel de calidad de datos** en el dashboard: reconciliación y rechazos por motivo, expuestos en gold.
 - **CI** (GitHub Actions): lint, tests de Python y `dbt build` sobre una muestra de los datos.
 - **Cargas incrementales y un orquestador** si los datos llegan periódicamente: modelos incrementales en dbt, y reintentos y alertas en Dagster o Airflow.
-- **Infraestructura:** subir `work_mem` y `shm_size` de Postgres, que hoy usa los valores de fábrica (Q3–Q6 escriben ordenamientos a disco), y agregar rotación de logs.
+- **Infraestructura:**
+  - **Memoria de Postgres:** subir `work_mem` y `shm_size`, que hoy están en los valores de fábrica. Q3–Q6 escriben ordenamientos a disco, y el `VACUUM` paralelo de índices no entra en los 64 MB de `/dev/shm` que da Docker (hoy se evita con `parallel 0`).
+  - **Rotación de logs** en todos los servicios (`max-size` y `max-file`), para que los logs de Docker no crezcan sin límite.
+  - **Log de consultas lentas** en Postgres (`log_min_duration_statement`), para detectar regresiones de rendimiento.
+  - **Imagen alpine de PostGIS:** evaluarla por tamaño, revalidando el orden de los textos en español, que con musl puede cambiar.
 
 ## 📦 Datasets
 
