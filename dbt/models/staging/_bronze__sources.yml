@@ -1,0 +1,134 @@
+version: 2
+
+# Tablas que carga el ETL en Python (etl/src/ingest). Todas las columnas son text y conservan
+# el valor original del archivo; el detalle de cada una está en docs/data-dictionary.md.
+# Los tests de acá son de contrato: que la tabla tenga filas y traiga las columnas que usa silver.
+
+sources:
+  - name: bronze
+    schema: bronze
+    description: Archivos de entrada tal cual llegan, más metadatos de carga.
+    tables:
+      - name: trips
+        description: Viajes 2025 (ecobici-datasets-2025.csv), una fila por viaje.
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 1
+          - dbt_expectations.expect_table_columns_to_contain_set:
+              arguments:
+                column_list:
+                  - id_recorrido
+                  - duracion_recorrido
+                  - fecha_origen_recorrido
+                  - id_estacion_origen
+                  - nombre_estacion_origen
+                  - direccion_estacion_origen
+                  - long_estacion_origen
+                  - lat_estacion_origen
+                  - fecha_destino_recorrido
+                  - id_estacion_destino
+                  - nombre_estacion_destino
+                  - direccion_estacion_destino
+                  - long_estacion_destino
+                  - lat_estacion_destino
+                  - id_usuario
+                  - modelo_bicicleta
+                  - genero
+        columns:
+          - name: id_recorrido
+            description: ID del viaje con sufijo BAEcobici.
+          - name: duracion_recorrido
+            description: Duración en segundos; el 48 % trae separador de miles ("3,108").
+          - name: fecha_origen_recorrido
+            description: Inicio del viaje, YYYY-MM-DD HH:MM:SS.
+          - name: id_estacion_origen
+            description: ID de la estación de origen con sufijo BAEcobici.
+          - name: fecha_destino_recorrido
+            description: Fin del viaje, YYYY-MM-DD HH:MM:SS.
+          - name: id_estacion_destino
+            description: ID de la estación de destino con sufijo BAEcobici.
+          - name: id_usuario
+            description: ID del usuario con sufijo BAEcobici.
+          - name: modelo_bicicleta
+            description: FIT o ICONIC.
+          - name: genero
+            description: MALE, FEMALE, OTHER o vacío (columna original "género").
+
+      - name: users_2024
+        description: Usuarios con alta en 2024 (usuarios-ecobici-2024.csv).
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 1
+          - dbt_expectations.expect_table_columns_to_contain_set:
+              arguments:
+                column_list: [id_usuario, genero_usuario, edad_usuario, fecha_alta, hora_alta]
+        columns:
+          - name: id_usuario
+            description: ID del usuario, sin sufijo.
+          - name: edad_usuario
+            description: Edad declarada; hay valores fuera de rango (4 a 2021).
+
+      - name: users_2025
+        description: Usuarios con alta en 2025 (usuarios-ecobici-2025.csv).
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 1
+          - dbt_expectations.expect_table_columns_to_contain_set:
+              arguments:
+                column_list:
+                  - id_cliente
+                  - genero_usuario
+                  - edad_usuario
+                  - fecha_alta
+                  - hora_alta
+                  - customer_has_dni_yes_no
+        columns:
+          - name: id_cliente
+            description: ID del usuario, sin sufijo (columna original "ID Cliente").
+          - name: edad_usuario
+            description: Edad declarada; hay valores fuera de rango y con separador de miles.
+          - name: customer_has_dni_yes_no
+            description: Yes o No (columna original "Customer Has Dni (Yes / No)").
+
+      - name: stations
+        description: Catálogo de estaciones del sistema actual (estaciones.csv).
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 1
+          - dbt_expectations.expect_table_columns_to_contain_set:
+              arguments:
+                column_list: [id, numero_de_estacion, nombre, direccion, latitud, longitud]
+        columns:
+          - name: id
+            description: ID de la estación; clave de cruce con los viajes.
+          - name: numero_de_estacion
+            description: Número público; no es clave (9 repetidos).
+
+      - name: stations_legacy
+        description: >
+          Catálogo del sistema viejo (estaciones-sistema-viejo.csv). Solo se conserva en
+          bronze: reutiliza IDs de otras estaciones (ADR 002).
+
+      - name: comunas
+        description: Polígonos de las 15 comunas (data/reference/comunas.geojson).
+        data_tests:
+          - dbt_expectations.expect_table_row_count_to_be_between:
+              arguments:
+                min_value: 15
+                max_value: 15
+          - dbt_expectations.expect_table_columns_to_contain_set:
+              arguments:
+                column_list: [comuna, barrios, perimetro, area, geometry]
+        columns:
+          - name: geometry
+            description: Geometría GeoJSON (Polygon o MultiPolygon) como texto.
+
+      - name: _ingestion_log
+        description: Un registro por intento de carga de cada archivo (estado, hash, filas).
+
+      - name: _column_mapping
+        description: Nombre original de cada columna de bronze.

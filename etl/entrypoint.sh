@@ -9,7 +9,5 @@ fi
 
 ecobici-ingest
 
-if [ -f /app/dbt/dbt_project.yml ]; then
-    exec dbt build --project-dir /app/dbt --profiles-dir /app/dbt
-fi
-echo "dbt todavía no está configurado (T4.1): se saltea dbt build."
+# DBT_PROJECT_DIR y DBT_PROFILES_DIR vienen de la imagen (etl/Dockerfile).
+exec dbt build

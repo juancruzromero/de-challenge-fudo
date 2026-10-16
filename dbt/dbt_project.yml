@@ -1,0 +1,39 @@
+name: ecobici
+version: "0.1.0"
+config-version: 2
+profile: ecobici
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+clean-targets: ["target", "dbt_packages"]
+
+# Arquitectura medallion (plan.md §4). bronze lo carga el ETL en Python; dbt arma silver y gold.
+# Las vistas de staging (stg_*) van en silver para no necesitar un schema más.
+models:
+  ecobici:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +schema: silver
+      +materialized: view
+    silver:
+      +schema: silver
+      +materialized: table
+    gold:
+      +schema: gold
+      +materialized: table
+
+seeds:
+  ecobici:
+    +schema: silver
+
+tests:
+  ecobici:
+    +severity: error
+
+vars:
+  # Período analizado: los viajes fuera de este año se rechazan (FR-07).
+  analysis_year: 2025

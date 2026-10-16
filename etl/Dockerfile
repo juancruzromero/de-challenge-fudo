@@ -9,6 +9,8 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_PYTHON_DOWNLOADS=never \
     PYTHONUNBUFFERED=1 \
+    DBT_PROJECT_DIR=/app/dbt \
+    DBT_PROFILES_DIR=/app/dbt \
     PATH=/opt/venv/bin:$PATH
 
 WORKDIR /app
@@ -21,7 +23,9 @@ RUN uv sync --project etl --frozen --no-dev --no-install-project
 COPY etl/src etl/src
 RUN uv sync --project etl --frozen --no-dev
 
-# 3. Proyecto dbt (se agrega en T4.1; el entrypoint lo saltea si no existe).
+# 3. Proyecto dbt. Los paquetes se bajan en el build: el pipeline corre sin internet.
+COPY dbt/packages.yml dbt/package-lock.yml dbt/dbt_project.yml dbt/
+RUN dbt deps
 COPY dbt dbt
 
 COPY etl/entrypoint.sh /usr/local/bin/entrypoint.sh

@@ -59,11 +59,11 @@
 - [x] **T3.3** `load_bronze.py` + comando `ecobici-ingest` (`--force`, `--only`): crea tabla TEXT según header, `COPY` con columnas de metadatos, `bronze._column_mapping`, registro en `bronze._ingestion_log`, skip si el hash ya fue cargado; el GeoJSON se carga como una fila por comuna con la geometría en TEXT. (FR-01..03)
   - Aceptación: correr dos veces no duplica filas; conteos iguales a `spec.md §2`.
   - Commit: `feat(etl): load raw CSVs into bronze with COPY`
-- [~] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build` + servicio `etl` en `docker-compose.yml` (one-shot, depende de `postgres` healthy; `metabase` espera `service_completed_successfully`).
+- [x] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build` + servicio `etl` en `docker-compose.yml` (one-shot, depende de `postgres` healthy; `metabase` espera `service_completed_successfully`).
   - Commit: `test(etl): add ingestion tests and container entrypoint`
 
 ## Fase 4 — Silver (dbt)
-- [ ] **T4.1** Proyecto dbt: `dbt_project.yml`, `profiles.yml` por env, `packages.yml` (dbt_utils, dbt_expectations), `sources.yml` de bronze.
+- [~] **T4.1** Proyecto dbt: `dbt_project.yml`, `profiles.yml` por env, `packages.yml` + `package-lock.yml` (dbt_utils 1.4.1, metaplane/dbt_expectations 0.10.10), sources de bronze con tests de contrato, macro `generate_schema_name`, `dbt deps` en el build de la imagen.
   - Commit: `feat(dbt): scaffold dbt project and bronze sources`
 - [ ] **T4.2** Silver de comunas (`ST_GeomFromGeoJSON`, índice GiST) y de estaciones: catálogo actual + 6 estaciones derivadas de viajes, comuna por `ST_Contains` con respaldo por cercanía. (FR-05, FR-05b, FR-05c)
   - Aceptación: 413 estaciones (407 + 6), todas con comuna; AEROPARQUE con `comuna_assignment = 'nearest'` y comuna 14 (ADR 001).

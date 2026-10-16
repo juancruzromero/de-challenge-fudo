@@ -52,6 +52,11 @@ services:
       DATA_REFERENCE_DIR: /data/reference
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-json}
+      DBT_TARGET: ${DBT_TARGET:-dev}
+      DBT_THREADS: ${DBT_THREADS:-4}
+      # dbt loguea en el mismo formato que el ETL (json/text) y sin colores ANSI.
+      DBT_LOG_FORMAT: ${LOG_FORMAT:-json}
+      DBT_USE_COLORS: "false"
     volumes:
       - ./data/raw:/data/raw:ro
       - ./data/reference:/data/reference:ro

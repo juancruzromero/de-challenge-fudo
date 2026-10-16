@@ -10,3 +10,4 @@ dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 **/__pycache__/
+dbt/.user.yml
