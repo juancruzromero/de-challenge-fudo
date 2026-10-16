@@ -44,9 +44,9 @@
 - [x] **T2.1** `docker-compose.yml`: `postgres` con imagen `imresamu/postgis:16-3.5.3-bookworm` (variante multi-arquitectura de `postgis/postgis`, que solo publica amd64), `metabase` v0.64.2.7 + `metabase-db`; healthchecks, volúmenes y dependencias por `service_healthy`. Los servicios `etl` y `metabase-provision` se suman en T3.4 y T7.1, cuando existan sus imágenes.
   - Aceptación: `docker compose config` válido; postgres healthy.
   - Commit: `build(docker): add compose stack`
-- [~] **T2.2** `sql/init/`: extensión `postgis`; schemas `bronze`, `silver`, `gold`; roles `etl` (escritura) y `bi_reader` (solo lectura en gold).
+- [x] **T2.2** `sql/init/`: extensión `postgis`; schemas `bronze`, `silver`, `gold`; roles `etl` (escritura) y `bi_reader` (solo lectura en gold).
   - Commit: `feat(db): add init scripts for schemas and roles`
-- [ ] **T2.3** `Makefile`: `up`, `down`, `reset`, `etl`, `dbt`, `test`, `lint`, `logs`, `psql`, `sql`.
+- [~] **T2.3** `Makefile`: `up`, `down`, `reset`, `ps`, `logs`, `psql`, `etl`, `dbt`, `sql`, `setup`, `test`, `lint`, `profile` (crea `.env` desde `.env.example`; los comandos de servicios futuros avisan en qué tarea llegan).
   - Aceptación: `make help` lista los targets.
   - Commit: `build: add Makefile entrypoints`
 

@@ -39,17 +39,30 @@ data/raw/*.csv ──► 🥉 bronze ──► 🥈 silver ──► 🥇 gold �
 
 ## 🚀 Quickstart
 
-> 🚧 En construcción: los comandos estarán disponibles al cerrar la Fase 2 del [plan](specs/tasks.md).
+> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS) y Metabase. La ingesta y el dashboard llegan en las próximas fases del [plan](specs/tasks.md).
 
-**Requisitos:** Docker y Docker Compose.
+**Requisitos:** Docker y Docker Compose. Para desarrollo local, además [uv](https://docs.astral.sh/uv/).
 
 ```bash
 # 1. Descargar los datasets en data/raw/ (ver tabla de abajo)
-# 2. Levantar todo
+# 2. Levantar todo (crea .env desde .env.example si no existe)
 make up
 # 3. Abrir el dashboard
 open http://localhost:3000
 ```
+
+`make help` lista todos los comandos:
+
+| Comando | Qué hace |
+|---|---|
+| `make up` / `make down` | Levanta / detiene el stack |
+| `make reset` | Borra los datos y levanta desde cero |
+| `make ps` · `make logs` | Estado y logs de los servicios |
+| `make psql` | Consola SQL en la base analítica |
+| `make etl` · `make dbt` | Corre el pipeline / un comando de dbt |
+| `make sql` | Corre las consultas de análisis |
+| `make setup` · `make test` · `make lint` | Entorno local, tests y linters |
+| `make profile` | Regenera el reporte de profiling de los datasets |
 
 ## 📦 Datasets
 
