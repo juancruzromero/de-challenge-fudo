@@ -195,6 +195,8 @@ data/reference/ 🗺️ GeoJSON de comunas (versionado)
 
 El proyecto se desarrolló con **Spec-Driven Development**: primero el plan y la especificación, después las tareas, una por commit.
 
+🤖 Lo trabajé con [Claude Code](https://claude.com/claude-code) como copiloto. Yo definí el alcance, el stack y las decisiones sobre los datos, y revisé cada tarea antes de commitearla. Claude implementó y propuso alternativas dentro de ese marco.
+
 - 🧭 [plan.md](specs/plan.md): stack, arquitectura y decisiones técnicas.
 - 📐 [spec.md](specs/spec.md): requerimientos, reglas de calidad de datos y criterios de aceptación.
 - ✅ [tasks.md](specs/tasks.md): tareas por fase y su estado.
