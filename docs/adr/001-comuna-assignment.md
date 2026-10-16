@@ -43,3 +43,4 @@ El profiling ([profile.md](../profiling/profile.md)) muestra que 406 de las 407 
 ## Notas
 
 - **2026-10-15 (T2.1):** la imagen oficial `postgis/postgis` solo se publica para amd64. Se usa `imresamu/postgis:16-3.5.3-bookworm`, la variante multi-arquitectura que mantiene un colaborador del proyecto postgis-docker, para que corra nativa también en arm64 (Apple Silicon). No cambia la decisión.
+- **2026-10-15 (T4.2):** verificado: la comuna más cercana a AEROPARQUE es la 14, con un test de dbt (`assert_aeroparque_in_comuna_14`). Apareció un caso no previsto: la estación 510 "[Valet] Galpón" no tiene coordenadas válidas en ningún viaje (lat/long en 0); se conserva con `comuna_assignment = 'unknown'` y comuna `NULL` (ver ADR 002).

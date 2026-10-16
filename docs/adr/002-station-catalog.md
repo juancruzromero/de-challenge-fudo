@@ -42,3 +42,7 @@ Además, los dos catálogos comparten 135 IDs, pero **26 de ellos son estaciones
 - El modelo depende de que el catálogo actual siga usando los mismos IDs que los viajes. Un test de dbt de `relationships` entre `fct_trips` y `dim_station` lo controla en cada corrida.
 - `source` deja visibles las 6 estaciones reconstruidas, por si después aparecen en una versión nueva del catálogo.
 - Si se suman viajes de años anteriores (anteriores al sistema actual), habría que revisar esta decisión con un catálogo por período.
+
+## Notas
+
+- **2026-10-15 (T4.2):** una de las 6 estaciones completadas desde los viajes, la 510 "[Valet] Galpón" (punto de servicio, no una estación pública), trae lat/long en 0 en sus 176 apariciones. Se conserva sin ubicación (`comuna_assignment = 'unknown'`, comuna `NULL`) para que ningún viaje pierda su estación. No cambia la decisión.

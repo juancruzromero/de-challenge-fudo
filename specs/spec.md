@@ -57,7 +57,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
   - Fechas: `YYYY-MM-DD HH:MM:SS` → `timestamp`; `fecha_alta` + `hora_alta` → `timestamp` de alta.
   - Textos: trim, género en {`MALE`, `FEMALE`, `OTHER`, NULL}, modelo en {`FIT`, `ICONIC`}.
   - Coordenadas: `numeric` y punto PostGIS (SRID 4326).
-- **FR-05** **Estaciones**: la fuente es `estaciones.csv`. Las 6 estaciones que aparecen en los viajes y no están en el catálogo se completan con el nombre, la dirección y las coordenadas más frecuentes en los viajes, con `source = 'trips'`.
+- **FR-05** **Estaciones**: la fuente es `estaciones.csv`. Las 6 estaciones que aparecen en los viajes y no están en el catálogo se completan con el nombre, la dirección y las coordenadas más frecuentes en los viajes, con `source = 'trips'`. Si una de ellas no tiene coordenadas válidas en ningún viaje, se conserva con coordenadas y comuna `NULL` y `comuna_assignment = 'unknown'` (hoy, solo la 510 "[Valet] Galpón").
 - **FR-05b** El catálogo del sistema viejo **no se usa** para el modelo: 26 de sus 135 IDs compartidos corresponden a otra ubicación a 200 m o más (por ejemplo, el id 131 es "Retiro III" en el viejo y "Hospital de Clínicas" en el actual, a 2,4 km; el 176 es "Pinzón" y "Parque Sarmiento I", a 15 km).
 - **FR-05c** **Comuna**: se asigna con PostGIS mediante `ST_Contains(comuna.geom, station.geom)`. Si una estación no cae en ningún polígono, se le asigna la comuna más cercana (`ST_Distance`) con `comuna_assignment = 'nearest'`. No se asigna barrio: el GeoJSON solo lista los barrios de cada comuna, sin sus polígonos.
 - **FR-06** Deduplicar viajes, usuarios y estaciones por su ID natural.
@@ -71,7 +71,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 | Viaje | fecha de destino < fecha de origen | rechazado (`destination_before_origin`) | 0 |
 | Viaje | sin ID de estación de origen o destino | rechazado (`missing_station`) | 1 |
 | Viaje | sin nombre o coordenadas de estación | se conserva; los atributos salen de `dim_station` | 18 orígenes / 29 destinos |
-| Viaje | coordenadas de estación en 0 (fuera de CABA) | se conserva; los atributos salen de `dim_station` | 176 destinos |
+| Viaje | coordenadas de estación en 0 (fuera de CABA) | se conserva; los atributos salen de `dim_station`. Son todos de la estación 510 "[Valet] Galpón", que queda sin comuna (FR-05) | 176 destinos |
 | Viaje | misma estación de origen y destino | se conserva con `is_round_trip = true` | 275.733 |
 | Viaje | género vacío | género = NULL | 8.601 |
 | Usuario | edad no numérica o fuera de [15, 100] | edad = NULL (el usuario se conserva) | 2025: 100 (5 menores de 15, 95 mayores de 100, de los cuales 17 con separador de miles) · 2024: 76 (6 + 70) |
@@ -82,7 +82,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 
 ### Modelo analítico (gold)
 - **FR-09** Modelo estrella. Desde silver, las columnas van en inglés snake_case (ver [diccionario de datos](../docs/data-dictionary.md)):
-  - `dim_station` (station_id, station_number, name, address, latitude, longitude, geom, comuna, comuna_assignment, source)
+  - `dim_station` (station_id, station_number, station_name, address, latitude, longitude, geom, comuna, comuna_assignment, source)
   - `dim_comuna` (comuna, barrios, perimeter_m, area_m2, geom)
   - `dim_user` (user_id, has_profile, gender, age, age_group, signed_up_at, signup_year, signup_month, has_dni). Incluye **todos** los usuarios que aparecen en los viajes. Para los que no están en ninguno de los archivos de usuarios, `has_profile = false`, la edad y la fecha de alta quedan NULL y el género se toma del más frecuente en sus viajes.
   - `dim_bike_model` (bike_model_id, bike_model)

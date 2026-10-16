@@ -62,11 +62,11 @@ endef
 
 etl: env ## Corre el pipeline completo: ingesta a bronze + dbt build
 	$(call require_service,etl,T3.4)
-	$(COMPOSE) run --rm etl
+	$(COMPOSE) run --rm --build etl
 
 dbt: env ## Corre un comando de dbt (c="build --select silver", por defecto build)
 	$(call require_service,etl,T3.4)
-	$(COMPOSE) run --rm etl dbt $(or $(c),build)
+	$(COMPOSE) run --rm --build etl dbt $(or $(c),build)
 
 sql: env ## Corre las consultas de sql/analysis/ como bi_reader
 	@ls sql/analysis/*.sql >/dev/null 2>&1 || { \

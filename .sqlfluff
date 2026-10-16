@@ -12,6 +12,8 @@ tab_space_size = 4
 
 [sqlfluff:templater:jinja]
 apply_dbt_builtins = True
+# Las macros del proyecto (clean_id, clean_number, ...) se expanden igual que en dbt.
+load_macros_from_path = dbt/macros
 
 [sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = lower
@@ -30,3 +32,7 @@ aliasing = explicit
 
 [sqlfluff:rules:aliasing.column]
 aliasing = explicit
+
+[sqlfluff:rules:references.keywords]
+# `source` no es palabra reservada en Postgres y es el nombre natural de esa columna.
+ignore_words = source

@@ -43,7 +43,7 @@ Cada columna de cada archivo de entrada: cómo se llama en el origen, en **bronz
 | `id_estacion_destino` | `id_estacion_destino` | `destination_station_id` | `integer` FK | `17BAEcobici` → `17` | Quitar sufijo. Vacío → rechazado `missing_station` (1). |
 | `nombre_estacion_destino` | `nombre_estacion_destino` | — | — | `017 - Plaza Almagro` | Como en origen. 29 vacíos. |
 | `direccion_estacion_destino` | `direccion_estacion_destino` | — | — | `441 Bulnes & Peron, Juan Domingo` | Como en origen. 177 vacíos. |
-| `long_estacion_destino` | `long_estacion_destino` | — | — | `-58.4187306` | Como en origen. 29 vacíos; 176 en `0` (fuera de CABA → faltante). |
+| `long_estacion_destino` | `long_estacion_destino` | — | — | `-58.4187306` | Como en origen. 29 vacíos; 176 en `0` (fuera de CABA → faltante): son todos de la estación 510 "[Valet] Galpón". |
 | `lat_estacion_destino` | `lat_estacion_destino` | — | — | `-34.6064101` | Como en origen. 29 vacíos; 176 en `0`. |
 | `id_usuario` | `id_usuario` | `user_id` | `integer` FK | `1177390BAEcobici` → `1177390` | Quitar sufijo. El 51 % no tiene perfil en los archivos de usuarios: se conserva igual (ver `dim_user.has_profile`). |
 | `modelo_bicicleta` | `modelo_bicicleta` | `bike_model` | `text` | `ICONIC` | Valores aceptados: `FIT`, `ICONIC`. |
@@ -84,13 +84,13 @@ Dos archivos con esquemas distintos que se cargan por separado en bronze (FR-01c
 
 ## 📍 Estaciones (sistema actual)
 
-`data/raw/estaciones.csv` (UTF-8 con BOM) → `bronze.stations` → `silver.stations`. 407 filas, más 6 estaciones que solo aparecen en los viajes (FR-05): 413 en silver.
+`data/raw/estaciones.csv` (UTF-8 con BOM) → `bronze.stations` → `silver.stations`. 407 filas, más 6 estaciones que solo aparecen en los viajes (FR-05): 413 en silver. Las comunas quedan: 411 por polígono, 1 por cercanía (AEROPARQUE → 14) y 1 sin ubicación (510).
 
 | Origen | Bronze | Silver | Tipo silver | Ejemplo | Regla |
 |---|---|---|---|---|---|
 | `id` | `id` | `station_id` | `integer` PK | `240` | Clave de cruce con los viajes (99,8 % de cobertura). |
 | `numero_de_estacion` | `numero_de_estacion` | `station_number` | `integer` | `239` | Número público de la estación. **No es clave**: 9 repetidos. |
-| `nombre` | `nombre` | `name` | `text` | `VIDAL` | Nombre de referencia de la estación (FR-07: gana sobre los nombres de los viajes). |
+| `nombre` | `nombre` | `station_name` | `text` | `VIDAL` | Nombre de referencia de la estación (FR-07: gana sobre los nombres de los viajes). |
 | `direccion` | `direccion` | `address` | `text` | `Av. Cramer 2900` | `trim`. |
 | `barrio` | `barrio` | — | — | (vacío) | Vacío en las 407 filas: se descarta. |
 | `comuna` | `comuna` | — | — | (vacío) | Vacío en las 407 filas: se calcula (ver `comuna` abajo). |
@@ -99,7 +99,7 @@ Dos archivos con esquemas distintos que se cargan por separado en bronze (FR-01c
 | `longitud` | `longitud` | `longitude` | `numeric` | `-58.467259` | Dentro de CABA en las 407 filas. |
 | — | — | `geom` | `geometry(Point, 4326)` | — | `ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)`, índice GiST. |
 | — | — | `comuna` | `smallint` | `13` | `ST_Contains` contra `silver.comunas`; si no cae en ninguna, la más cercana (FR-05c). |
-| — | — | `comuna_assignment` | `text` | `contains` | `contains` o `nearest` (solo AEROPARQUE, id 541). |
+| — | — | `comuna_assignment` | `text` | `contains` | `contains`; `nearest` (solo AEROPARQUE, id 541, asignada a la comuna 14); `unknown` si no tiene coordenadas válidas (solo la 510 "[Valet] Galpón", con comuna `NULL`). |
 | — | — | `source` | `text` | `catalog` | `catalog` para las 407 del archivo; `trips` para las 6 completadas desde los viajes (591, 448, 593, 443, 510, 594). |
 
 ## 📍 Estaciones (sistema viejo)

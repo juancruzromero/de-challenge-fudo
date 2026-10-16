@@ -63,10 +63,10 @@
   - Commit: `test(etl): add ingestion tests and container entrypoint`
 
 ## Fase 4 — Silver (dbt)
-- [~] **T4.1** Proyecto dbt: `dbt_project.yml`, `profiles.yml` por env, `packages.yml` + `package-lock.yml` (dbt_utils 1.4.1, metaplane/dbt_expectations 0.10.10), sources de bronze con tests de contrato, macro `generate_schema_name`, `dbt deps` en el build de la imagen.
+- [x] **T4.1** Proyecto dbt: `dbt_project.yml`, `profiles.yml` por env, `packages.yml` + `package-lock.yml` (dbt_utils 1.4.1, metaplane/dbt_expectations 0.10.10), sources de bronze con tests de contrato, macro `generate_schema_name`, `dbt deps` en el build de la imagen.
   - Commit: `feat(dbt): scaffold dbt project and bronze sources`
-- [ ] **T4.2** Silver de comunas (`ST_GeomFromGeoJSON`, índice GiST) y de estaciones: catálogo actual + 6 estaciones derivadas de viajes, comuna por `ST_Contains` con respaldo por cercanía. (FR-05, FR-05b, FR-05c)
-  - Aceptación: 413 estaciones (407 + 6), todas con comuna; AEROPARQUE con `comuna_assignment = 'nearest'` y comuna 14 (ADR 001).
+- [~] **T4.2** Silver de comunas (`ST_GeomFromGeoJSON`, índice GiST) y de estaciones: catálogo actual + 6 estaciones derivadas de viajes, comuna por `ST_Contains` con respaldo por cercanía. (FR-05, FR-05b, FR-05c)
+  - Aceptación: 413 estaciones (407 + 6); todas con comuna salvo la 510 sin ubicación (`unknown`); AEROPARQUE con `comuna_assignment = 'nearest'` y comuna 14 (ADR 001); toda estación de los viajes existe en silver.
   - Commit: `feat(dbt): add silver comunas and stations with spatial join`
 - [ ] **T4.3** Silver de usuarios: unión de `users_2024` y `users_2025` con esquema común (FR-01c), rejected, edad inválida → NULL, `fecha_alta` + `hora_alta` → timestamp.
   - Aceptación: 389.751 usuarios (197.077 + 192.674), `signup_year` en {2024, 2025}.

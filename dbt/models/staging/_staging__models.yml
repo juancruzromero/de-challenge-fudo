@@ -1,0 +1,15 @@
+version: 2
+
+# Staging: solo tipado y renombre de bronze, sin reglas de negocio. Vistas en el schema silver.
+
+models:
+  - name: stg_bronze__comunas
+    description: Comunas tipadas, con la geometría como MultiPolygon en WGS84.
+
+  - name: stg_bronze__stations
+    description: Catálogo de estaciones del sistema actual, tipado.
+
+  - name: stg_bronze__trip_stations
+    description: >
+      Atributos de estación como aparecen en cada viaje (una fila por extremo: origen y
+      destino). Coordenadas fuera de CABA quedan en NULL.

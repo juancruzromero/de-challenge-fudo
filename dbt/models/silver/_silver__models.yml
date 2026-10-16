@@ -1,0 +1,97 @@
+version: 2
+
+models:
+  - name: comunas
+    description: Las 15 comunas de la Ciudad con su polígono (ADR 001).
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_equal:
+          arguments:
+            value: 15
+    columns:
+      - name: comuna
+        description: Número de comuna, de 1 a 15.
+        data_tests:
+          - unique
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 15
+      - name: barrios
+        description: Barrios de la comuna, solo descriptivo (no hay polígonos por barrio).
+      - name: perimeter_m
+        description: Perímetro en metros.
+      - name: area_m2
+        description: Superficie en metros cuadrados.
+      - name: geom
+        description: Polígono de la comuna, MultiPolygon WGS84 (SRID 4326).
+        data_tests:
+          - not_null
+
+  - name: stations
+    description: >
+      Estaciones del sistema actual más las que solo aparecen en los viajes (ADR 002), con su
+      comuna asignada por punto en polígono (ADR 001).
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_equal:
+          arguments:
+            value: 413
+    columns:
+      - name: station_id
+        description: ID de la estación (sin el sufijo BAEcobici de los viajes).
+        data_tests:
+          - unique
+          - not_null
+      - name: station_number
+        description: Número público de la estación. No es clave; NULL si viene de los viajes.
+      - name: station_name
+        description: Nombre de la estación según el catálogo (o el más frecuente en los viajes).
+        data_tests:
+          - not_null
+      - name: address
+        description: Dirección de la estación.
+      - name: latitude
+        description: Latitud WGS84, dentro de CABA. NULL si la estación no tiene ubicación.
+        data_tests:
+          - not_null:
+              config:
+                where: "comuna_assignment <> 'unknown'"
+      - name: longitude
+        description: Longitud WGS84, dentro de CABA. NULL si la estación no tiene ubicación.
+        data_tests:
+          - not_null:
+              config:
+                where: "comuna_assignment <> 'unknown'"
+      - name: geom
+        description: Punto PostGIS de la estación (SRID 4326). NULL si la estación no tiene ubicación.
+        data_tests:
+          - not_null:
+              config:
+                where: "comuna_assignment <> 'unknown'"
+      - name: comuna
+        description: Comuna donde está la estación; NULL si no tiene ubicación (unknown).
+        data_tests:
+          - not_null:
+              config:
+                where: "comuna_assignment <> 'unknown'"
+          - relationships:
+              arguments:
+                to: ref('comunas')
+                field: comuna
+      - name: comuna_assignment
+        description: >
+          contains si la estación cae dentro del polígono; nearest si se asignó la comuna más
+          cercana (solo AEROPARQUE); unknown si no tiene coordenadas válidas (solo la 510
+          "[Valet] Galpón").
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [contains, nearest, unknown]
+      - name: source
+        description: catalog (estaciones.csv) o trips (completada desde los viajes).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [catalog, trips]
