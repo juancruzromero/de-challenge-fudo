@@ -83,9 +83,9 @@
   - Commit: `feat(dbt): add trips fact table`
 - [x] **T5.3** `agg_station_od_monthly` (FR-10): 535.947 filas mes × origen × destino, con nombres, comunas y coordenadas de las dos estaciones; suma exacta contra `fct_trips` por mes.
   - Commit: `feat(dbt): add monthly origin-destination aggregate`
-- [~] **T5.4** Marts Q1–Q6 en gold (FR-11): 8 marts en `models/gold/marts/` + test `assert_marts_reconcile` (los marts cuadran entre sí y con `fct_trips`).
+- [x] **T5.4** Marts Q1–Q6 en gold (FR-11): 8 marts en `models/gold/marts/` + test `assert_marts_reconcile` (los marts cuadran entre sí y con `fct_trips`).
   - Commit: `feat(dbt): add analytical marts for challenge questions`
-- [ ] **T5.5** `sql/analysis/q1..q6_*.sql` + target `make sql` (FR-12).
+- [~] **T5.5** `sql/analysis/q1..q6_*.sql` sobre el modelo estrella (no sobre los marts), comentadas para leerse solas + `make sql` (`q=q3` para una sola) (FR-12).
   - Commit: `feat(sql): add standalone analysis queries`
 - [ ] **T5.6** `dbt docs` + diagrama ER en `docs/er-diagram.md`.
   - Commit: `docs: add ER diagram and dbt docs`

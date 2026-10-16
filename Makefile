@@ -68,10 +68,10 @@ dbt: env ## Corre un comando de dbt (c="build --select silver", por defecto buil
 	$(call require_service,etl,T3.4)
 	$(COMPOSE) run --rm --build etl dbt $(or $(c),build)
 
-sql: env ## Corre las consultas de sql/analysis/ como bi_reader
-	@ls sql/analysis/*.sql >/dev/null 2>&1 || { \
-		echo "Todavía no hay consultas en sql/analysis/: se agregan en T5.5."; exit 1; }
-	@for file in sql/analysis/*.sql; do \
+sql: env ## Corre las consultas de sql/analysis/ como bi_reader (q=q3 para una sola)
+	@ls sql/analysis/$(or $(q),)*.sql >/dev/null 2>&1 || { \
+		echo "No hay consultas que coincidan con sql/analysis/$(q)*.sql."; exit 1; }
+	@for file in sql/analysis/$(or $(q),)*.sql; do \
 		echo "=== $$file"; \
 		$(COMPOSE) exec -T -e PGPASSWORD="$(BI_DB_PASSWORD)" postgres \
 			psql -h localhost -U "$(BI_DB_USER)" -d "$(POSTGRES_DB)" -v ON_ERROR_STOP=1 \

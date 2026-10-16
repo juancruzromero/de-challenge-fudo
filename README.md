@@ -60,7 +60,7 @@ open http://localhost:3000
 | `make ps` · `make logs` | Estado y logs de los servicios |
 | `make psql` | Consola SQL en la base analítica |
 | `make etl` · `make dbt` | Corre el pipeline / un comando de dbt |
-| `make sql` | Corre las consultas de análisis |
+| `make sql` | Corre las 6 consultas de análisis (`make sql q=q3` para una sola) |
 | `make setup` · `make test` · `make lint` | Entorno local, tests y linters |
 | `make profile` | Regenera el reporte de profiling de los datasets |
 
