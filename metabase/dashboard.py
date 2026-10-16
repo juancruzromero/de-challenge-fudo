@@ -210,10 +210,10 @@ group by origin_station_name, origin_latitude, origin_longitude
         tab=TAB_TRIPS,
         pos=(21, 0),
         size=(24, 11),
-        description="Cada punto es una estación; el detalle muestra cuántos viajes salen de ella.",
+        description="Un pin por estación; al pasar el mouse muestra cuántos viajes salen de ella.",
         settings={
             "map.type": "pin",
-            "map.pin_type": "tiles",
+            "map.pin_type": "markers",
             "map.latitude_column": "Latitud",
             "map.longitude_column": "Longitud",
             "map.metric_column": "Viajes",
