@@ -98,16 +98,16 @@
   - Commit: `perf(db): add indexes and partitioning to gold`
 
 ## Fase 7 — Metabase
-- [~] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader` + servicio `metabase-provision` en `docker-compose.yml` (one-shot, depende de `metabase` healthy).
+- [x] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader` + servicio `metabase-provision` en `docker-compose.yml` (one-shot, depende de `metabase` healthy).
   - Hecho: el servicio va en el perfil `provision` y `make up` lo corre con `docker compose run` después del `--wait` (con `up`, `--wait` contaba como falla al one-shot que terminaba antes). Quita la base y la colección de ejemplo. `make provision` lo repite.
   - Commit: `feat(metabase): automate setup and database connection`
-- [~] **T7.2** Preguntas y dashboard: OD entre estaciones con filtros mes/comuna, mapa, evolución mensual, Q1–Q6. (FR-14, EX-02)
+- [x] **T7.2** Preguntas y dashboard: OD entre estaciones con filtros mes/comuna, mapa, evolución mensual, Q1–Q6. (FR-14, EX-02)
   - Hecho: `metabase/dashboard.py` define 16 preguntas en SQL nativo y 2 pestañas. Viajes entre estaciones: filtros mes/comuna (field filters), indicadores, evolución mensual, top 20 OD, mapa de estaciones y Sankey entre comunas. Preguntas Q1–Q6: lee los marts. `provision.py` lo crea o actualiza por nombre, lo deja como inicio y usa formato de números es-AR.
   - Aceptación: dashboard visible en `localhost:3000` tras `make up`.
   - Commit: `feat(metabase): provision trips dashboard`
 
 ## Fase 8 — README y entrega
-- [ ] **T8.1** README: requisitos, `make up`, arquitectura, modelo, decisiones/trade-offs, cómo probar, capturas, próximos pasos.
+- [~] **T8.1** README: requisitos, `make up`, arquitectura, modelo, decisiones/trade-offs, cómo probar, capturas, próximos pasos.
   - Commit: `docs: complete README`
 - [ ] **T8.2** Validación final en clon limpio (`make reset && make up`) contra criterios de `spec.md §6`.
   - Commit: `chore: final validation fixes` (si aplica)
