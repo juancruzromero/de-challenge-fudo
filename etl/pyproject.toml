@@ -17,6 +17,7 @@ dev = [
 ]
 
 [project.scripts]
+ecobici-ingest = "ingest.cli:main"
 ecobici-profile = "profiling.profile:main"
 
 [build-system]
