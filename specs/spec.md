@@ -88,7 +88,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
   - `dim_user` (user_id, has_profile, gender, gender_source, age, age_group, signed_up_at, signup_date, signup_year, signup_month, has_dni). Incluye a **todos** los usuarios con viajes válidos en 2025 **y** a todos los de los archivos de alta 2024 y 2025, aunque no hayan viajado (Q4 necesita esos ceros por cohorte): 487.262 usuarios. Sin perfil (altas anteriores a 2024): `has_profile = false`, edad y fecha de alta en NULL y el género es el más frecuente en sus viajes (`gender_source = 'trips'`).
   - `dim_bike_model` (bike_model_id, bike_model)
   - `dim_date` (date_day, year, quarter, month, month_name, year_month, month_start, day_of_month, day_of_week, day_name, is_weekend), de la primera alta (2024-01-01) al último fin de viaje. Sin feriados: se pueden sumar como seed desde una fuente oficial
-  - `fct_trips` (trip_id, started_at, ended_at, origin_station_id, destination_station_id, user_id, bike_model_id, duration_seconds, is_round_trip)
+  - `fct_trips` (trip_id, started_at, ended_at, start_date, start_hour, origin_station_id, destination_station_id, user_id, bike_model_id, duration_seconds, duration_minutes, distance_m, is_round_trip). `distance_m` es la distancia en línea recta entre estaciones (`ST_DistanceSphere`), no el recorrido real
 - **FR-10** `agg_station_od_monthly`: viajes y duración media por par origen→destino y mes.
 - **FR-11** Marts / consultas para cada pregunta del challenge:
 

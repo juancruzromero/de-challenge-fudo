@@ -164,3 +164,98 @@ models:
         description: Nombre del día en español.
       - name: is_weekend
         description: Sábado o domingo.
+
+  - name: fct_trips
+    description: Hechos de viajes 2025, un viaje por fila (FR-09).
+    data_tests:
+      # Ningún viaje válido se pierde en los joins con las dimensiones.
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          arguments:
+            compare_model: ref('trips')
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "start_date = started_at::date"
+    columns:
+      - name: trip_id
+        description: ID del viaje.
+        data_tests:
+          - unique
+          - not_null
+      - name: started_at
+        description: Inicio del viaje.
+        data_tests:
+          - not_null
+      - name: ended_at
+        description: Fin del viaje.
+        data_tests:
+          - not_null
+      - name: start_date
+        description: Fecha de inicio (FK a dim_date).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: start_hour
+        description: Hora de inicio (0 a 23).
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 23
+      - name: origin_station_id
+        description: Estación de origen (FK a dim_station).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_station')
+                field: station_id
+      - name: destination_station_id
+        description: Estación de destino (FK a dim_station).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_station')
+                field: station_id
+      - name: user_id
+        description: Usuario (FK a dim_user).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_user')
+                field: user_id
+      - name: bike_model_id
+        description: Modelo de bicicleta (FK a dim_bike_model).
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_bike_model')
+                field: bike_model_id
+      - name: duration_seconds
+        description: Duración informada por el sistema, en segundos.
+        data_tests:
+          - not_null
+      - name: duration_minutes
+        description: Duración en minutos.
+        data_tests:
+          - not_null
+      - name: distance_m
+        description: >
+          Distancia en línea recta entre estación de origen y destino, en metros. 0 en los
+          viajes de ida y vuelta; NULL si alguna estación no tiene ubicación.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 0
+                max_value: 30000
+              config:
+                where: "distance_m is not null"
+      - name: is_round_trip
+        description: Termina en la misma estación donde empezó.
+        data_tests:
+          - not_null
