@@ -39,7 +39,7 @@ data/raw/*.csv ──► 🥉 bronze ──► 🥈 silver ──► 🥇 gold �
 
 ## 🚀 Quickstart
 
-> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS), carga los datasets en bronze, arma silver con dbt (limpieza, rechazos y 79 tests de calidad) y levanta Metabase. La capa gold y el dashboard llegan en las próximas fases del [plan](specs/tasks.md).
+> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS), carga los datasets en bronze, arma silver y gold con dbt (limpieza, rechazos, modelo estrella, marts de Q1–Q6 y 146 tests de calidad) y deja Metabase configurado y conectado a gold. El dashboard llega en la próxima fase del [plan](specs/tasks.md).
 
 **Requisitos:** Docker y Docker Compose. Para desarrollo local, además [uv](https://docs.astral.sh/uv/).
 
@@ -51,6 +51,8 @@ make up
 open http://localhost:3000
 ```
 
+Metabase queda configurado por código ([metabase/provision.py](metabase/provision.py)): el usuario es `MB_ADMIN_EMAIL` y la clave `MB_ADMIN_PASSWORD`, los dos en `.env`. La conexión usa `bi_reader`, que solo lee el schema `gold`.
+
 `make help` lista todos los comandos:
 
 | Comando | Qué hace |
@@ -60,6 +62,7 @@ open http://localhost:3000
 | `make ps` · `make logs` | Estado y logs de los servicios |
 | `make psql` | Consola SQL en la base analítica |
 | `make etl` · `make dbt` | Corre el pipeline / un comando de dbt |
+| `make provision` | Vuelve a configurar Metabase (admin y conexión); idempotente |
 | `make sql` | Corre las 6 consultas de análisis (`make sql q=q3` para una sola) |
 | `make docs` | Documentación de dbt (modelos, columnas, tests y linaje) en http://localhost:8080 |
 | `make setup` · `make test` · `make lint` | Entorno local, tests y linters |

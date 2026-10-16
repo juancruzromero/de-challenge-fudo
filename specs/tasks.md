@@ -98,7 +98,8 @@
   - Commit: `perf(db): add indexes and partitioning to gold`
 
 ## Fase 7 — Metabase
-- [ ] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader` + servicio `metabase-provision` en `docker-compose.yml` (one-shot, depende de `metabase` healthy).
+- [~] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader` + servicio `metabase-provision` en `docker-compose.yml` (one-shot, depende de `metabase` healthy).
+  - Hecho: el servicio va en el perfil `provision` y `make up` lo corre con `docker compose run` después del `--wait` (con `up`, `--wait` contaba como falla al one-shot que terminaba antes). Quita la base y la colección de ejemplo. `make provision` lo repite.
   - Commit: `feat(metabase): automate setup and database connection`
 - [ ] **T7.2** Preguntas y dashboard: OD entre estaciones con filtros mes/comuna, mapa, evolución mensual, Q1–Q6. (FR-14, EX-02)
   - Aceptación: dashboard visible en `localhost:3000` tras `make up`.
