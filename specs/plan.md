@@ -22,7 +22,7 @@ Challenge técnico de Data Engineer ([CHALLENGUE.md](../CHALLENGUE.md)): constru
 |---|---|---|
 | Lenguaje ETL | Python 3.12 + `uv` | Gestión de dependencias rápida y reproducible (`uv.lock`). |
 | Carga | `psycopg` 3 con `COPY` | Carga masiva de millones de filas en segundos. |
-| Base de datos | PostgreSQL 16 + PostGIS (`postgis/postgis:16`) | Relacional, estándar, particionado declarativo e índices avanzados; PostGIS asigna la comuna de cada estación por punto en polígono. |
+| Base de datos | PostgreSQL 16 + PostGIS 3.5 (`imresamu/postgis`, multi-arquitectura) | Relacional, estándar, particionado declarativo e índices avanzados; PostGIS asigna la comuna de cada estación por punto en polígono. |
 | Transformación | dbt-core + dbt-postgres | Modelos SQL versionados, tests, docs y lineage. |
 | Visualización | Metabase | Se conecta a Postgres, dashboards interactivos, provisionable por API. |
 | Infra | Docker Compose + Makefile | Un comando, sin orquestador (batch anual, no lo justifica). |

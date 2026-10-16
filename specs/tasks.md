@@ -37,11 +37,11 @@
 - [x] **T1.2** `docs/data-dictionary.md`: cada columna de cada archivo con nombre original, nombre normalizado, tipo destino, ejemplo y regla de limpieza.
   - Aceptación: todas las columnas documentadas y consistentes con FR-04/FR-07.
   - Commit: `docs: add data dictionary`
-- [~] **T1.3** ADRs: `docs/adr/001-comuna-assignment.md` (PostGIS + respaldo por cercanía), `002-station-catalog.md` (actual vs viejo), `003-users-coverage.md` (altas 2024 + 2025, 49 % de cobertura, `has_profile`). El GeoJSON ya está en `data/reference/`.
+- [x] **T1.3** ADRs: `docs/adr/001-comuna-assignment.md` (PostGIS + respaldo por cercanía), `002-station-catalog.md` (actual vs viejo), `003-users-coverage.md` (altas 2024 + 2025, 49 % de cobertura, `has_profile`). El GeoJSON ya está en `data/reference/`.
   - Commit: `docs(adr): record data sourcing decisions`
 
 ## Fase 2 — Infra
-- [ ] **T2.1** `docker-compose.yml`: `postgres` con imagen `postgis/postgis:16` (healthcheck, volumen), `etl`, `metabase` + `metabase-db`, `metabase-provision`; dependencias por `service_healthy` / `service_completed_successfully`.
+- [~] **T2.1** `docker-compose.yml`: `postgres` con imagen `imresamu/postgis:16-3.5.3-bookworm` (variante multi-arquitectura de `postgis/postgis`, que solo publica amd64), `metabase` v0.64.2.7 + `metabase-db`; healthchecks, volúmenes y dependencias por `service_healthy`. Los servicios `etl` y `metabase-provision` se suman en T3.4 y T7.1, cuando existan sus imágenes.
   - Aceptación: `docker compose config` válido; postgres healthy.
   - Commit: `build(docker): add compose stack`
 - [ ] **T2.2** `sql/init/`: extensión `postgis`; schemas `bronze`, `silver`, `gold`; roles `etl` (escritura) y `bi_reader` (solo lectura en gold).
@@ -59,7 +59,7 @@
 - [ ] **T3.3** `load_bronze.py`: crea tabla TEXT según header, `COPY` con columnas de metadatos, `bronze._column_mapping`, registro en `bronze._ingestion_log`, skip si el hash ya fue cargado; el GeoJSON se carga como una fila por comuna con la geometría en TEXT. (FR-01..03)
   - Aceptación: correr dos veces no duplica filas; conteos iguales a `spec.md §2`.
   - Commit: `feat(etl): load raw CSVs into bronze with COPY`
-- [ ] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build`.
+- [ ] **T3.4** Tests pytest (detección de formato, idempotencia con Postgres de test) + Dockerfile del `etl` + entrypoint `ingest → dbt build` + servicio `etl` en `docker-compose.yml` (one-shot, depende de `postgres` healthy; `metabase` espera `service_completed_successfully`).
   - Commit: `test(etl): add ingestion tests and container entrypoint`
 
 ## Fase 4 — Silver (dbt)
@@ -98,7 +98,7 @@
   - Commit: `perf(db): add indexes and partitioning to gold`
 
 ## Fase 7 — Metabase
-- [ ] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader`.
+- [ ] **T7.1** `metabase/provision.py`: espera healthy, setup admin, conexión a Postgres con `bi_reader` + servicio `metabase-provision` en `docker-compose.yml` (one-shot, depende de `metabase` healthy).
   - Commit: `feat(metabase): automate setup and database connection`
 - [ ] **T7.2** Preguntas y dashboard: OD entre estaciones con filtros mes/comuna, mapa, evolución mensual, Q1–Q6. (FR-14, EX-02)
   - Aceptación: dashboard visible en `localhost:3000` tras `make up`.

@@ -18,7 +18,7 @@ Lo que sí hay son coordenadas WGS84 en todas las estaciones del catálogo actua
 Calcular la comuna con un cruce espacial dentro de la base:
 
 1. Versionar el GeoJSON oficial en `data/reference/comunas.geojson`, con su fuente y su SHA-256 en `spec.md`.
-2. Usar la imagen `postgis/postgis:16` y cargar los polígonos en `silver.comunas` como `geometry(MultiPolygon, 4326)` con índice GiST.
+2. Usar una imagen de PostgreSQL 16 con PostGIS y cargar los polígonos en `silver.comunas` como `geometry(MultiPolygon, 4326)` con índice GiST.
 3. En `silver.stations`, asignar la comuna con `ST_Contains(comuna.geom, station.geom)`.
 4. Si una estación no cae dentro de ningún polígono, asignarle la comuna más cercana (`ST_Distance`) y marcarla con `comuna_assignment = 'nearest'`.
 
@@ -39,3 +39,7 @@ El profiling ([profile.md](../profiling/profile.md)) muestra que 406 de las 407 
 - Las geometrías quedan disponibles en gold: Metabase puede mostrar mapas de estaciones y comunas.
 - `comuna_assignment` deja explícita la única asignación aproximada. Un test de dbt verifica que todas las estaciones tengan comuna.
 - No se asigna barrio: el GeoJSON solo lista los barrios de cada comuna, sin sus polígonos. Si hiciera falta, se agrega el GeoJSON de barrios con el mismo mecanismo.
+
+## Notas
+
+- **2026-10-15 (T2.1):** la imagen oficial `postgis/postgis` solo se publica para amd64. Se usa `imresamu/postgis:16-3.5.3-bookworm`, la variante multi-arquitectura que mantiene un colaborador del proyecto postgis-docker, para que corra nativa también en arm64 (Apple Silicon). No cambia la decisión.
