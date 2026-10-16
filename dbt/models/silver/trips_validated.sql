@@ -1,7 +1,9 @@
-{{ config(materialized='ephemeral') }}
+-- unlogged: es una tabla intermedia que se reconstruye en cada build, no necesita WAL.
+{{ config(unlogged=true) }}
 
 -- Viajes con un reject_reason por fila (FR-07, FR-08). Las reglas se evalúan en orden y se
--- informa la primera que falla. No se materializa: lo leen trips y trips_rejected.
+-- informa la primera que falla. Lo leen trips y trips_rejected. Se materializa (T6.2): como
+-- efímero, cada uno repetía la limpieza completa de bronze (~25 s cada uno).
 
 with ranked as (
     select
