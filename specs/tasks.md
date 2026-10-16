@@ -81,9 +81,9 @@
   - Commit: `feat(dbt): add gold dimensions`
 - [x] **T5.2** `fct_trips` (3.155.783 viajes, con `start_date`, `start_hour`, `duration_minutes` y `distance_m` entre estaciones) + tests de relaciones con las 4 dimensiones.
   - Commit: `feat(dbt): add trips fact table`
-- [~] **T5.3** `agg_station_od_monthly` (FR-10): 535.947 filas mes × origen × destino, con nombres, comunas y coordenadas de las dos estaciones; suma exacta contra `fct_trips` por mes.
+- [x] **T5.3** `agg_station_od_monthly` (FR-10): 535.947 filas mes × origen × destino, con nombres, comunas y coordenadas de las dos estaciones; suma exacta contra `fct_trips` por mes.
   - Commit: `feat(dbt): add monthly origin-destination aggregate`
-- [ ] **T5.4** Marts Q1–Q6 en gold (FR-11).
+- [~] **T5.4** Marts Q1–Q6 en gold (FR-11): 8 marts en `models/gold/marts/` + test `assert_marts_reconcile` (los marts cuadran entre sí y con `fct_trips`).
   - Commit: `feat(dbt): add analytical marts for challenge questions`
 - [ ] **T5.5** `sql/analysis/q1..q6_*.sql` + target `make sql` (FR-12).
   - Commit: `feat(sql): add standalone analysis queries`

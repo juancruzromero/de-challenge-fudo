@@ -1,0 +1,251 @@
+version: 2
+
+# Un mart por pregunta del challenge (FR-11). Las consultas legibles equivalentes están en
+# sql/analysis/. El test assert_marts_reconcile verifica que los marts cuadren entre sí y con
+# fct_trips.
+
+models:
+  - name: mart_q1_comunas_origin
+    description: "Q1: comunas de las que más viajes parten."
+    data_tests:
+      - dbt_expectations.expect_column_sum_to_be_between:
+          arguments:
+            column_name: pct_trips
+            min_value: 99.9
+            max_value: 100.1
+    columns:
+      - name: ranking
+        description: Posición por cantidad de viajes (1 = la que más).
+        data_tests:
+          - not_null
+      - name: comuna
+        description: Número de comuna; NULL para "Sin ubicación".
+      - name: comuna_label
+        description: Comuna o "Sin ubicación".
+        data_tests:
+          - unique
+          - not_null
+      - name: trips
+        description: Viajes que salen de estaciones de la comuna.
+      - name: pct_trips
+        description: Porcentaje del total de viajes.
+      - name: stations
+        description: Estaciones en la comuna.
+      - name: trips_per_station
+        description: Viajes por estación (normaliza por tamaño de la red en la comuna).
+
+  - name: mart_q2_comunas_destination
+    description: "Q2: comunas que más viajes reciben."
+    data_tests:
+      - dbt_expectations.expect_column_sum_to_be_between:
+          arguments:
+            column_name: pct_trips
+            min_value: 99.9
+            max_value: 100.1
+    columns:
+      - name: ranking
+        description: Posición por cantidad de viajes (1 = la que más).
+        data_tests:
+          - not_null
+      - name: comuna
+        description: Número de comuna; NULL para "Sin ubicación".
+      - name: comuna_label
+        description: Comuna o "Sin ubicación".
+        data_tests:
+          - unique
+          - not_null
+      - name: trips
+        description: Viajes que terminan en estaciones de la comuna.
+      - name: pct_trips
+        description: Porcentaje del total de viajes.
+      - name: stations
+        description: Estaciones en la comuna.
+      - name: trips_per_station
+        description: Viajes por estación.
+
+  - name: mart_q3_trips_by_age_group
+    description: >
+      Q3: viajes por rango etario. Universo: usuarios con perfil (altas 2024-2025), incluidos
+      los que no viajaron.
+    columns:
+      - name: sort_order
+        description: Orden de los rangos para graficar.
+        data_tests:
+          - unique
+      - name: age_group
+        description: Rango etario o "Sin dato".
+        data_tests:
+          - unique
+          - not_null
+      - name: users
+        description: Usuarios con perfil en el rango.
+      - name: active_users
+        description: Usuarios con al menos un viaje en 2025.
+      - name: pct_active_users
+        description: Porcentaje de usuarios activos.
+      - name: trips
+        description: Viajes de los usuarios del rango.
+      - name: trips_per_user
+        description: Viajes por usuario (incluye los que no viajaron).
+      - name: trips_per_active_user
+        description: Viajes por usuario activo.
+      - name: pct_of_all_trips
+        description: Porcentaje del total de viajes 2025 que hacen estos usuarios.
+
+  - name: mart_q3_age_correlation
+    description: >
+      Q3: correlación de Pearson y regresión lineal simple viajes ~ edad, a nivel usuario.
+      Es una correlación, no una relación causal.
+    columns:
+      - name: universe
+        description: Usuarios incluidos en el cálculo.
+        data_tests:
+          - unique
+          - not_null
+      - name: users
+        description: Usuarios en el universo.
+      - name: trips
+        description: Viajes de esos usuarios.
+      - name: pct_of_all_trips
+        description: Cobertura sobre el total de viajes 2025.
+      - name: pearson_r
+        description: Correlación de Pearson entre edad y viajes (-1 a 1).
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: -1
+                max_value: 1
+      - name: slope_trips_per_year_of_age
+        description: Viajes de más (o de menos) por cada año de edad.
+      - name: intercept
+        description: Ordenada al origen de la regresión.
+      - name: r_squared
+        description: Proporción de la variación de viajes que explica la edad (0 a 1).
+
+  - name: mart_q4_trips_by_signup_month
+    description: >
+      Q4: viajes por mes de alta (24 cohortes, 2024-2025). trips_per_30_days normaliza por
+      los días que cada usuario pudo viajar en 2025.
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_equal:
+          arguments:
+            value: 24
+    columns:
+      - name: signup_month
+        description: Primer día del mes de alta.
+        data_tests:
+          - unique
+          - not_null
+      - name: signup_year_month
+        description: Mes de alta como YYYY-MM.
+      - name: signup_year
+        description: Año de alta.
+      - name: users
+        description: Usuarios dados de alta en el mes.
+      - name: active_users
+        description: Usuarios con al menos un viaje en 2025.
+      - name: pct_active_users
+        description: Porcentaje de usuarios activos.
+      - name: trips
+        description: Viajes 2025 de los usuarios de la cohorte.
+      - name: trips_per_user
+        description: Viajes por usuario (sesgado a favor de las altas viejas).
+      - name: trips_per_active_user
+        description: Viajes por usuario activo.
+      - name: avg_exposure_days
+        description: Días promedio de 2025 en los que los usuarios ya estaban dados de alta.
+      - name: trips_per_30_days
+        description: Viajes cada 30 días de exposición (comparable entre cohortes).
+
+  - name: mart_q5_duration_by_bike_model
+    description: "Q5: duración de los viajes por modelo de bicicleta."
+    columns:
+      - name: bike_model
+        description: Modelo de bicicleta.
+        data_tests:
+          - unique
+          - not_null
+      - name: trips
+        description: Viajes.
+      - name: pct_trips
+        description: Porcentaje del total de viajes.
+      - name: avg_duration_minutes
+        description: Duración media en minutos.
+      - name: p25_duration_minutes
+        description: Percentil 25 de la duración.
+      - name: median_duration_minutes
+        description: Mediana de la duración.
+      - name: p75_duration_minutes
+        description: Percentil 75 de la duración.
+      - name: p90_duration_minutes
+        description: Percentil 90 de la duración.
+      - name: pct_round_trips
+        description: Porcentaje de viajes de ida y vuelta.
+      - name: avg_distance_m
+        description: Distancia media en línea recta, sin ida y vuelta.
+      - name: avg_speed_kmh
+        description: Velocidad media en línea recta (cota inferior), sin ida y vuelta.
+
+  - name: mart_q5_duration_by_model_and_distance
+    description: >
+      Q5 (control): duración por modelo dentro de cada tramo de distancia, para separar el
+      efecto del modelo del efecto del recorrido.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [distance_band_order, bike_model]
+    columns:
+      - name: distance_band_order
+        description: Orden del tramo para graficar.
+      - name: distance_band
+        description: Tramo de distancia en línea recta.
+        data_tests:
+          - not_null
+      - name: bike_model
+        description: Modelo de bicicleta.
+      - name: trips
+        description: Viajes.
+      - name: avg_duration_minutes
+        description: Duración media en minutos.
+      - name: median_duration_minutes
+        description: Mediana de la duración.
+
+  - name: mart_q6_top_users
+    description: "Q6: los usuarios más activos de 2025 (top N, var top_users)."
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_equal:
+          arguments:
+            value: "{{ var('top_users') }}"
+    columns:
+      - name: ranking
+        description: Posición (1 = más viajes).
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: ID del usuario.
+        data_tests:
+          - unique
+          - not_null
+      - name: trips
+        description: Viajes en 2025.
+      - name: total_hours
+        description: Horas totales de viaje.
+      - name: avg_duration_minutes
+        description: Duración media por viaje.
+      - name: active_days
+        description: Días distintos con al menos un viaje.
+      - name: trips_per_active_day
+        description: Viajes por día con viajes.
+      - name: favorite_origin_station
+        description: Estación desde la que más viajes inició.
+      - name: trips_from_favorite_station
+        description: Viajes iniciados en esa estación.
+      - name: has_profile
+        description: Si está en los archivos de alta 2024-2025.
+      - name: gender
+        description: Género.
+      - name: age_group
+        description: Rango etario.
+      - name: signup_year
+        description: Año de alta (NULL sin perfil).

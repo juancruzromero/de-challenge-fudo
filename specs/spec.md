@@ -92,14 +92,14 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 - **FR-10** `agg_station_od_monthly`: viajes y duración media por par origen→destino y mes.
 - **FR-11** Marts / consultas para cada pregunta del challenge:
 
-| ID | Pregunta | Salida mínima | Universo |
-|---|---|---|---|
-| Q1 | Comunas de las que más viajes parten | comuna, viajes, % del total, ranking | todos los viajes |
-| Q2 | Comunas que más viajes reciben | comuna, viajes, % del total, ranking | todos los viajes |
-| Q3 | Relación edad ↔ cantidad de viajes | rango etario, usuarios, viajes, viajes por usuario, `regr_slope`/`regr_r2` | usuarios con `has_profile` y edad válida (~49 % de los viajes) |
-| Q4 | Relación cantidad de viajes ↔ fecha de alta | cohorte de alta (mes, 2024–2025), usuarios, viajes, viajes por usuario, días desde el alta, comparación 2024 vs 2025 | usuarios con `has_profile` |
-| Q5 | Relación duración ↔ modelo de bicicleta | modelo, viajes, duración media, mediana, p90 | todos los viajes |
-| Q6 | Usuarios más activos de 2025 | top N usuarios, viajes, duración total, estación más usada | todos los viajes |
+| ID | Pregunta | Mart en gold | Salida | Universo |
+|---|---|---|---|---|
+| Q1 | Comunas de las que más viajes parten | `mart_q1_comunas_origin` | comuna, viajes, % del total, ranking, estaciones, viajes por estación | todos los viajes |
+| Q2 | Comunas que más viajes reciben | `mart_q2_comunas_destination` | ídem Q1, por estación de destino | todos los viajes |
+| Q3 | Relación edad ↔ cantidad de viajes | `mart_q3_trips_by_age_group`, `mart_q3_age_correlation` | por rango etario: usuarios, % activos, viajes, viajes por usuario y por usuario activo, % del total; a nivel usuario: Pearson, pendiente, ordenada y R² | usuarios con perfil, incluidos los de 0 viajes (49 % de los viajes) |
+| Q4 | Relación cantidad de viajes ↔ fecha de alta | `mart_q4_trips_by_signup_month` | por mes de alta (24 cohortes 2024-2025): usuarios, % activos, viajes, viajes por usuario y **viajes cada 30 días de exposición** (días de 2025 desde el alta), que permite comparar cohortes de distinta antigüedad | usuarios con perfil, incluidos los de 0 viajes |
+| Q5 | Relación duración ↔ modelo de bicicleta | `mart_q5_duration_by_bike_model`, `mart_q5_duration_by_model_and_distance` | por modelo: viajes, media, p25, mediana, p75, p90, % ida y vuelta, distancia y velocidad; control por tramo de distancia | todos los viajes |
+| Q6 | Usuarios más activos de 2025 | `mart_q6_top_users` | top N (var `top_users` = 100): viajes, horas, días activos, viajes por día activo, estación favorita, perfil | todos los viajes |
 
   Q3 y Q4 informan en su salida la cobertura (viajes incluidos sobre el total).
 - **FR-12** Cada consulta Q1–Q6 existe como archivo legible en `sql/analysis/qN_*.sql` contra `gold`.

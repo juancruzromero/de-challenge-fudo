@@ -37,6 +37,8 @@ tests:
 vars:
   # Período analizado: los viajes fuera de este año se rechazan (FR-07).
   analysis_year: 2025
+  # Q6: cantidad de usuarios en el ranking de más activos.
+  top_users: 100
   # Caja que contiene a CABA, con margen. Una coordenada fuera se trata como faltante
   # (por ejemplo, los 176 destinos con lat/long en 0).
   caba_bbox:
