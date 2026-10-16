@@ -11,24 +11,24 @@ group by origin_station_name, destination_station_name, destination_comuna_label
 order by trips desc
 limit 20;
 
-Limit  (cost=26156.36..26156.41 rows=20 width=69) (actual time=32.401..32.404 rows=20 loops=1)
+Limit  (cost=25769.59..25769.64 rows=20 width=69) (actual time=26.090..26.092 rows=20 loops=1)
   Buffers: shared hit=2413
-  ->  Sort  (cost=26156.36..26264.54 rows=43273 width=69) (actual time=32.401..32.402 rows=20 loops=1)
+  ->  Sort  (cost=25769.59..25876.28 rows=42673 width=69) (actual time=26.090..26.091 rows=20 loops=1)
         Sort Key: (sum(trips)) DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=2413
-        ->  HashAggregate  (cost=23033.25..25004.88 rows=43273 width=69) (actual time=28.954..30.695 rows=13491 loops=1)
+        ->  HashAggregate  (cost=22715.16..24634.08 rows=42673 width=69) (actual time=23.238..24.662 rows=13491 loops=1)
               Group Key: origin_station_name, destination_station_name, destination_comuna_label
               Batches: 1  Memory Usage: 3089kB
               Buffers: shared hit=2413
-              ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=923.21..14868.61 rows=81392 width=45) (actual time=1.176..6.383 rows=80192 loops=1)
+              ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=895.28..14808.53 rows=78820 width=45) (actual time=1.141..5.868 rows=80192 loops=1)
                     Recheck Cond: (origin_comuna_label = 'Comuna 1'::text)
                     Heap Blocks: exact=2341
                     Buffers: shared hit=2413
-                    ->  Bitmap Index Scan on fc5ab749e51dddb985e28f8fd329f996  (cost=0.00..902.86 rows=81392 width=0) (actual time=1.003..1.003 rows=80192 loops=1)
+                    ->  Bitmap Index Scan on "39e285d73f27eff324a0c9fc69f99cd2"  (cost=0.00..875.57 rows=78820 width=0) (actual time=0.971..0.972 rows=80192 loops=1)
                           Index Cond: (origin_comuna_label = 'Comuna 1'::text)
                           Buffers: shared hit=72
 Planning:
   Buffers: shared hit=1
-Planning Time: 0.043 ms
-Execution Time: 32.421 ms
+Planning Time: 0.032 ms
+Execution Time: 26.110 ms

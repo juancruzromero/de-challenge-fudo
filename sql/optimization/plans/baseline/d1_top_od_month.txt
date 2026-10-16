@@ -10,18 +10,18 @@ where month_start = date '2025-03-01'
 order by trips desc
 limit 20;
 
-Limit  (cost=16252.72..16252.77 rows=20 width=42) (actual time=12.332..12.335 rows=20 loops=1)
+Limit  (cost=16082.68..16082.73 rows=20 width=42) (actual time=10.711..10.713 rows=20 loops=1)
   Buffers: shared hit=1395
-  ->  Sort  (cost=16252.72..16377.15 rows=49772 width=42) (actual time=12.332..12.333 rows=20 loops=1)
+  ->  Sort  (cost=16082.68..16200.82 rows=47253 width=42) (actual time=10.711..10.712 rows=20 loops=1)
         Sort Key: trips DESC
         Sort Method: top-N heapsort  Memory: 27kB
         Buffers: shared hit=1395
-        ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=1378.16..14928.31 rows=49772 width=42) (actual time=1.060..7.910 rows=47953 loops=1)
+        ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=1306.64..14825.30 rows=47253 width=42) (actual time=0.886..6.821 rows=47953 loops=1)
               Recheck Cond: (month_start = '2025-03-01'::date)
               Heap Blocks: exact=1156
               Buffers: shared hit=1395
-              ->  Bitmap Index Scan on e3d131fb6745dd758cf0d3dac0d72446  (cost=0.00..1365.71 rows=49772 width=0) (actual time=0.977..0.977 rows=47953 loops=1)
+              ->  Bitmap Index Scan on "89532bd00171d724f3ca1f00a9082fe9"  (cost=0.00..1294.82 rows=47253 width=0) (actual time=0.812..0.812 rows=47953 loops=1)
                     Index Cond: (month_start = '2025-03-01'::date)
                     Buffers: shared hit=239
-Planning Time: 0.041 ms
-Execution Time: 12.343 ms
+Planning Time: 0.016 ms
+Execution Time: 10.717 ms

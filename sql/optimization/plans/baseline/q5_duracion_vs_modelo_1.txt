@@ -18,22 +18,22 @@ inner join gold.dim_bike_model as modelo
 group by modelo.bike_model
 order by modelo.bike_model;
 
-GroupAggregate  (cost=0.13..240366.87 rows=2 width=200) (actual time=1720.262..2459.296 rows=2 loops=1)
+GroupAggregate  (cost=0.13..240328.71 rows=2 width=200) (actual time=1605.516..2266.926 rows=2 loops=1)
   Group Key: modelo.bike_model
-  Buffers: shared hit=12842 read=29272, temp read=28712 written=20080
-  ->  Nested Loop  (cost=0.13..200915.73 rows=3156084 width=38) (actual time=4.308..1320.355 rows=3155783 loops=1)
+  Buffers: shared hit=12796 read=29318, temp read=28712 written=20080
+  ->  Nested Loop  (cost=0.13..200885.34 rows=3155463 width=38) (actual time=4.761..1196.677 rows=3155783 loops=1)
         Join Filter: (modelo.bike_model_id = viaje.bike_model_id)
         Rows Removed by Join Filter: 3155783
-        Buffers: shared hit=12842 read=29272, temp read=7692 written=7692
-        ->  Index Scan using f97780148d7b92bac02dd138ba571d0d on dim_bike_model modelo  (cost=0.13..12.16 rows=2 width=34) (actual time=0.007..0.015 rows=2 loops=1)
+        Buffers: shared hit=12796 read=29318, temp read=7692 written=7692
+        ->  Index Scan using "4a50e1f9c13c46a7a9419964c54bd4c1" on dim_bike_model modelo  (cost=0.13..12.16 rows=2 width=34) (actual time=0.008..0.015 rows=2 loops=1)
               Buffers: shared hit=2
-        ->  Materialize  (cost=0.00..101782.26 rows=3156084 width=8) (actual time=2.150..462.529 rows=3155783 loops=2)
-              Buffers: shared hit=12840 read=29272, temp read=7692 written=7692
-              ->  Seq Scan on fct_trips viaje  (cost=0.00..73672.84 rows=3156084 width=8) (actual time=4.293..325.352 rows=3155783 loops=1)
-                    Buffers: shared hit=12840 read=29272
-Planning Time: 0.094 ms
+        ->  Materialize  (cost=0.00..101770.95 rows=3155463 width=8) (actual time=2.377..404.342 rows=3155783 loops=2)
+              Buffers: shared hit=12794 read=29318, temp read=7692 written=7692
+              ->  Seq Scan on fct_trips viaje  (cost=0.00..73666.63 rows=3155463 width=8) (actual time=4.745..313.039 rows=3155783 loops=1)
+                    Buffers: shared hit=12794 read=29318
+Planning Time: 0.088 ms
 JIT:
   Functions: 15
   Options: Inlining false, Optimization false, Expressions true, Deforming true
-  Timing: Generation 0.359 ms, Inlining 0.000 ms, Optimization 0.190 ms, Emission 4.129 ms, Total 4.678 ms
-Execution Time: 2464.047 ms
+  Timing: Generation 0.415 ms, Inlining 0.000 ms, Optimization 0.200 ms, Emission 4.582 ms, Total 5.197 ms
+Execution Time: 2270.602 ms

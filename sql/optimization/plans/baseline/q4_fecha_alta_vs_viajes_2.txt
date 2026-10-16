@@ -23,47 +23,47 @@ from usuarios
 group by signup_year
 order by signup_year;
 
-Sort  (cost=328254.09..328254.59 rows=200 width=108) (actual time=745.871..748.451 rows=2 loops=1)
+Sort  (cost=328489.74..328490.24 rows=200 width=108) (actual time=690.836..693.093 rows=2 loops=1)
   Sort Key: usuario.signup_year
   Sort Method: quicksort  Memory: 25kB
-  Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-  ->  HashAggregate  (cost=328237.95..328246.45 rows=200 width=108) (actual time=745.866..748.448 rows=2 loops=1)
+  Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+  ->  HashAggregate  (cost=328473.60..328482.10 rows=200 width=108) (actual time=690.833..693.090 rows=2 loops=1)
         Group Key: usuario.signup_year
         Batches: 1  Memory Usage: 40kB
-        Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-        ->  Finalize GroupAggregate  (cost=196247.62..318448.85 rows=391564 width=28) (actual time=458.822..702.745 rows=389751 loops=1)
+        Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+        ->  Finalize GroupAggregate  (cost=196354.41..318674.75 rows=391954 width=28) (actual time=425.031..653.028 rows=389751 loops=1)
               Group Key: usuario.user_id, usuario.signup_year, usuario.signup_date
-              Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-              ->  Gather Merge  (cost=196247.62..303765.20 rows=783128 width=24) (actual time=458.804..618.439 rows=551422 loops=1)
+              Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+              ->  Gather Merge  (cost=196354.41..303976.48 rows=783908 width=24) (actual time=425.018..573.154 rows=552476 loops=1)
                     Workers Planned: 2
                     Workers Launched: 2
-                    Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-                    ->  Partial GroupAggregate  (cost=195247.60..212372.77 rows=391564 width=24) (actual time=413.603..537.731 rows=183807 loops=3)
+                    Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+                    ->  Partial GroupAggregate  (cost=195354.39..212494.02 rows=391954 width=24) (actual time=383.566..495.367 rows=184159 loops=3)
                           Group Key: usuario.user_id, usuario.signup_year, usuario.signup_date
-                          Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-                          ->  Sort  (cost=195247.60..197889.50 rows=1056763 width=24) (actual time=413.580..467.227 rows=582755 loops=3)
+                          Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+                          ->  Sort  (cost=195354.39..197998.41 rows=1057607 width=24) (actual time=383.547..429.870 rows=582755 loops=3)
                                 Sort Key: usuario.user_id, usuario.signup_year, usuario.signup_date
-                                Sort Method: external merge  Disk: 17240kB
-                                Buffers: shared hit=15216 read=32114, temp read=7087 written=7117
-                                Worker 0:  Sort Method: external merge  Disk: 22216kB
-                                Worker 1:  Sort Method: external merge  Disk: 17240kB
-                                ->  Parallel Hash Right Join  (cost=9125.66..67840.01 rows=1056763 width=24) (actual time=40.323..305.936 rows=582755 loops=3)
+                                Sort Method: external merge  Disk: 17184kB
+                                Buffers: shared hit=15246 read=32084, temp read=7088 written=7118
+                                Worker 0:  Sort Method: external merge  Disk: 22320kB
+                                Worker 1:  Sort Method: external merge  Disk: 17200kB
+                                ->  Parallel Hash Right Join  (cost=9127.68..67838.77 rows=1057607 width=24) (actual time=34.266..285.791 rows=582755 loops=3)
                                       Hash Cond: (viaje.user_id = usuario.user_id)
-                                      Buffers: shared hit=15072 read=32114
-                                      ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55262.35 rows=1315035 width=16) (actual time=0.036..67.933 rows=1051928 loops=3)
-                                            Buffers: shared hit=12552 read=29560
-                                      ->  Parallel Hash  (cost=7086.26..7086.26 rows=163152 width=16) (actual time=39.910..39.911 rows=129917 loops=3)
+                                      Buffers: shared hit=15102 read=32084
+                                      ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55259.76 rows=1314776 width=16) (actual time=0.011..60.396 rows=1051928 loops=3)
+                                            Buffers: shared hit=12505 read=29607
+                                      ->  Parallel Hash  (cost=7086.26..7086.26 rows=163314 width=16) (actual time=33.908..33.908 rows=129917 loops=3)
                                             Buckets: 524288  Batches: 1  Memory Usage: 22432kB
-                                            Buffers: shared hit=2502 read=2554
-                                            ->  Parallel Seq Scan on dim_user usuario  (cost=0.00..7086.26 rows=163152 width=16) (actual time=7.293..22.122 rows=129917 loops=3)
+                                            Buffers: shared hit=2579 read=2477
+                                            ->  Parallel Seq Scan on dim_user usuario  (cost=0.00..7086.26 rows=163314 width=16) (actual time=7.106..21.319 rows=129917 loops=3)
                                                   Filter: has_profile
                                                   Rows Removed by Filter: 32504
-                                                  Buffers: shared hit=2502 read=2554
+                                                  Buffers: shared hit=2579 read=2477
 Planning:
   Buffers: shared hit=17
-Planning Time: 0.188 ms
+Planning Time: 0.172 ms
 JIT:
   Functions: 61
   Options: Inlining false, Optimization false, Expressions true, Deforming true
-  Timing: Generation 1.508 ms, Inlining 0.000 ms, Optimization 0.976 ms, Emission 20.948 ms, Total 23.431 ms
-Execution Time: 750.077 ms
+  Timing: Generation 1.442 ms, Inlining 0.000 ms, Optimization 0.896 ms, Emission 20.467 ms, Total 22.805 ms
+Execution Time: 694.585 ms

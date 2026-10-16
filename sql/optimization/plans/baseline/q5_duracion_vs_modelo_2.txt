@@ -31,36 +31,36 @@ where viaje.distance_m is not null
 group by tramo_de_distancia
 order by tramo_de_distancia;
 
-GroupAggregate  (cost=212390.92..746046.02 rows=10926 width=104) (actual time=697.351..2817.586 rows=6 loops=1)
+GroupAggregate  (cost=212348.35..745883.09 rows=10992 width=104) (actual time=609.573..2448.116 rows=6 loops=1)
   Group Key: CASE WHEN viaje.is_round_trip THEN '0. Ida y vuelta'::text WHEN (viaje.distance_m < '1000'::numeric) THEN '1. Menos de 1 km'::text WHEN (viaje.distance_m < '2000'::numeric) THEN '2. 1 a 2 km'::text WHEN (viaje.distance_m < '3000'::numeric) THEN '3. 2 a 3 km'::text WHEN (viaje.distance_m < '5000'::numeric) THEN '4. 3 a 5 km'::text ELSE '5. 5 km o más'::text END
-  Buffers: shared hit=13538 read=28692 written=25, temp read=33451 written=34092
-  ->  Nested Loop  (cost=212390.92..682541.93 rows=3156084 width=70) (actual time=511.015..1868.812 rows=3155689 loops=1)
-        Buffers: shared hit=13538 read=28692 written=25, temp read=30220 written=30281
-        ->  Gather Merge  (cost=212390.78..579968.78 rows=3156084 width=13) (actual time=510.983..1076.767 rows=3155689 loops=1)
+  Buffers: shared hit=13520 read=28710, temp read=33453 written=34096
+  ->  Nested Loop  (cost=212348.35..682391.21 rows=3155358 width=70) (actual time=443.747..1610.958 rows=3155689 loops=1)
+        Buffers: shared hit=13520 read=28710, temp read=30222 written=30285
+        ->  Gather Merge  (cost=212348.22..579841.65 rows=3155358 width=13) (actual time=443.714..924.288 rows=3155689 loops=1)
               Workers Planned: 2
               Workers Launched: 2
-              Buffers: shared hit=13534 read=28692 written=25, temp read=30220 written=30281
-              ->  Sort  (cost=211390.76..214678.35 rows=1315035 width=13) (actual time=501.084..603.000 rows=1051896 loops=3)
+              Buffers: shared hit=13516 read=28710, temp read=30222 written=30285
+              ->  Sort  (cost=211348.19..214635.02 rows=1314732 width=13) (actual time=436.049..519.641 rows=1051896 loops=3)
                     Sort Key: (CASE WHEN viaje.is_round_trip THEN '0. Ida y vuelta'::text WHEN (viaje.distance_m < '1000'::numeric) THEN '1. Menos de 1 km'::text WHEN (viaje.distance_m < '2000'::numeric) THEN '2. 1 a 2 km'::text WHEN (viaje.distance_m < '3000'::numeric) THEN '3. 2 a 3 km'::text WHEN (viaje.distance_m < '5000'::numeric) THEN '4. 3 a 5 km'::text ELSE '5. 5 km o más'::text END)
-                    Sort Method: external merge  Disk: 41640kB
-                    Buffers: shared hit=13534 read=28692 written=25, temp read=30220 written=30281
-                    Worker 0:  Sort Method: external merge  Disk: 39616kB
-                    Worker 1:  Sort Method: external merge  Disk: 39704kB
-                    ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55262.35 rows=1315035 width=13) (actual time=77.319..222.105 rows=1051896 loops=3)
+                    Sort Method: external merge  Disk: 40280kB
+                    Buffers: shared hit=13516 read=28710, temp read=30222 written=30285
+                    Worker 0:  Sort Method: external merge  Disk: 40560kB
+                    Worker 1:  Sort Method: external merge  Disk: 40128kB
+                    ->  Parallel Seq Scan on fct_trips viaje  (cost=0.00..55259.76 rows=1314732 width=13) (actual time=73.204..194.097 rows=1051896 loops=3)
                           Filter: (distance_m IS NOT NULL)
                           Rows Removed by Filter: 31
-                          Buffers: shared hit=13420 read=28692 written=25
+                          Buffers: shared hit=13402 read=28710
         ->  Memoize  (cost=0.14..0.16 rows=1 width=34) (actual time=0.000..0.000 rows=1 loops=3155689)
               Cache Key: viaje.bike_model_id
               Cache Mode: logical
               Hits: 3155687  Misses: 2  Evictions: 0  Overflows: 0  Memory Usage: 1kB
               Buffers: shared hit=4
-              ->  Index Scan using "09f866824deae813e2507bc221263319" on dim_bike_model modelo  (cost=0.13..0.15 rows=1 width=34) (actual time=0.008..0.008 rows=1 loops=2)
+              ->  Index Scan using "0d3e91c025a924499e090981332a0501" on dim_bike_model modelo  (cost=0.13..0.15 rows=1 width=34) (actual time=0.010..0.010 rows=1 loops=2)
                     Index Cond: (bike_model_id = viaje.bike_model_id)
                     Buffers: shared hit=4
-Planning Time: 0.123 ms
+Planning Time: 0.129 ms
 JIT:
   Functions: 28
   Options: Inlining true, Optimization true, Expressions true, Deforming true
-  Timing: Generation 1.220 ms, Inlining 84.403 ms, Optimization 80.893 ms, Emission 66.601 ms, Total 233.116 ms
-Execution Time: 2820.600 ms
+  Timing: Generation 1.074 ms, Inlining 75.838 ms, Optimization 77.819 ms, Emission 65.912 ms, Total 220.644 ms
+Execution Time: 2450.748 ms

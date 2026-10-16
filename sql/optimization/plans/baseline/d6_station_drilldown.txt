@@ -8,16 +8,16 @@ from gold.agg_station_od_monthly
 where origin_station_id = 14
 order by month_start, trips desc;
 
-Sort  (cost=6616.33..6622.80 rows=2590 width=26) (actual time=0.877..0.967 rows=2533 loops=1)
+Sort  (cost=6808.89..6815.64 rows=2698 width=26) (actual time=0.861..0.931 rows=2533 loops=1)
   Sort Key: month_start, trips DESC
   Sort Method: quicksort  Memory: 231kB
   Buffers: shared hit=74
-  ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=32.50..6469.49 rows=2590 width=26) (actual time=0.025..0.339 rows=2533 loops=1)
+  ->  Bitmap Heap Scan on agg_station_od_monthly  (cost=33.33..6655.14 rows=2698 width=26) (actual time=0.025..0.337 rows=2533 loops=1)
         Recheck Cond: (origin_station_id = 14)
         Heap Blocks: exact=69
         Buffers: shared hit=74
-        ->  Bitmap Index Scan on e8e879c15ecff215f58970188b11c6e1  (cost=0.00..31.85 rows=2590 width=0) (actual time=0.023..0.023 rows=2533 loops=1)
+        ->  Bitmap Index Scan on "85d5cf12bb30a275d44d69f65882742c"  (cost=0.00..32.66 rows=2698 width=0) (actual time=0.022..0.022 rows=2533 loops=1)
               Index Cond: (origin_station_id = 14)
               Buffers: shared hit=5
-Planning Time: 0.015 ms
-Execution Time: 1.029 ms
+Planning Time: 0.016 ms
+Execution Time: 0.995 ms

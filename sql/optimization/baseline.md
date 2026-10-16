@@ -2,32 +2,32 @@
 
 > Generado por `make bench label=baseline`. No editar a mano: volver a correr el comando.
 
-- Fecha: 2026-10-16 01:22
+- Fecha: 2026-10-16 01:43
 - PostgreSQL 16.10 (Debian 16.10-1.pgdg12+1)
 - Corridas por consulta: 5 (más una de calentamiento); se informa la mediana del tiempo de ejecución de `EXPLAIN ANALYZE`.
 - Configuración: `shared_buffers=128MB`, `work_mem=4MB`, `effective_cache_size=4GB`, `max_parallel_workers_per_gather=2`, `jit=on`, `random_page_cost=4`
-- Estadísticas de gold: hubo que esperar 65 s al autoanalyze antes de medir.
+- Estadísticas de gold: hubo que esperar 55 s al autoanalyze antes de medir.
 
 ## Consultas
 
 | Consulta | Mediana (ms) | Mín–máx (ms) | Caché (MB) | Leído de disco (MB) | Temp escrito (MB) | Workers | Escaneos |
 |---|--:|--:|--:|--:|--:|--:|---|
-| `q1_comunas_origen` | 327 | 322–332 | 35,7 | 0 | 0 | 2 | Index Only Scan fct_trips<br>Seq Scan dim_station |
-| `q2_comunas_destino` | 656 | 633–722 | 71,5 | 0 | 0 | 2 | Index Only Scan fct_trips<br>Seq Scan dim_station |
-| `q3_edad_vs_viajes_1` | 923 | 860–1.092 | 85,9 | 283,9 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
-| `q3_edad_vs_viajes_2` | 777 | 767–842 | 96,2 | 273,4 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
-| `q4_fecha_alta_vs_viajes_1` | 916 | 905–978 | 106,9 | 262,9 | 188,1 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
-| `q4_fecha_alta_vs_viajes_2` | 805 | 761–959 | 117,4 | 252,4 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
-| `q5_duracion_vs_modelo_1` | 2.484 | 2.483–2.594 | 100,1 | 228,9 | 156,9 | 0 | Index Scan dim_bike_model<br>Seq Scan fct_trips |
-| `q5_duracion_vs_modelo_2` | 2.909 | 2.821–3.258 | 105,2 | 224,7 | 266,3 | 2 | Seq Scan fct_trips<br>Index Scan dim_bike_model |
-| `q6_usuarios_mas_activos` | 12.483 | 10.729–12.882 | 47.673,7 | 25.868,4 | 88,7 | 2 | Seq Scan dim_user<br>Index Scan fct_trips<br>Seq Scan dim_station |
-| `d1_top_od_month` | 12,2 | 11,6–12,6 | 10,9 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
-| `d1_top_od_month_from_fct` | 577 | 566–590 | 32,5 | 0 | 13,0 | 0 | Bitmap Heap Scan fct_trips<br>Seq Scan dim_station |
-| `d2_top_od_by_comuna` | 32,4 | 32,1–33,9 | 18,9 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
-| `d3_monthly_trend` | 49,1 | 47,8–50,7 | 29,6 | 71,5 | 0 | 2 | Seq Scan agg_station_od_monthly |
-| `d4_station_map` | 215 | 211–222 | 35,8 | 66,3 | 33,4 | 2 | Seq Scan agg_station_od_monthly |
-| `d5_comuna_matrix` | 65,4 | 65,0–66,1 | 40,1 | 61,0 | 0 | 2 | Seq Scan agg_station_od_monthly |
-| `d6_station_drilldown` | 1,0 | 1,0–1,1 | 0,6 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
+| `q1_comunas_origen` | 268 | 263–286 | 35,6 | 0 | 0 | 2 | Index Only Scan fct_trips<br>Seq Scan dim_station |
+| `q2_comunas_destino` | 550 | 543–754 | 71,2 | 0 | 0 | 2 | Index Only Scan fct_trips<br>Seq Scan dim_station |
+| `q3_edad_vs_viajes_1` | 795 | 765–880 | 86,1 | 283,7 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
+| `q3_edad_vs_viajes_2` | 704 | 639–763 | 96,5 | 273,2 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
+| `q4_fecha_alta_vs_viajes_1` | 819 | 763–904 | 107,1 | 262,7 | 188,2 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
+| `q4_fecha_alta_vs_viajes_2` | 746 | 708–759 | 117,6 | 252,2 | 55,6 | 2 | Seq Scan fct_trips<br>Seq Scan dim_user |
+| `q5_duracion_vs_modelo_1` | 2.283 | 2.244–2.591 | 99,7 | 229,3 | 156,9 | 0 | Index Scan dim_bike_model<br>Seq Scan fct_trips |
+| `q5_duracion_vs_modelo_2` | 2.498 | 2.426–2.530 | 104,9 | 225,0 | 266,4 | 2 | Seq Scan fct_trips<br>Index Scan dim_bike_model |
+| `q6_usuarios_mas_activos` | 11.468 | 9.231–12.065 | 47.812,3 | 25.745,1 | 88,7 | 2 | Seq Scan dim_user<br>Index Scan fct_trips<br>Seq Scan dim_station |
+| `d1_top_od_month` | 11,1 | 10,9–11,7 | 10,9 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
+| `d1_top_od_month_from_fct` | 466 | 462–468 | 32,6 | 0 | 13,0 | 0 | Bitmap Heap Scan fct_trips<br>Seq Scan dim_station |
+| `d2_top_od_by_comuna` | 26,5 | 26,3–27,1 | 18,9 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
+| `d3_monthly_trend` | 43,1 | 43,0–46,6 | 29,6 | 71,5 | 0 | 2 | Seq Scan agg_station_od_monthly |
+| `d4_station_map` | 182 | 180–191 | 35,8 | 66,3 | 33,4 | 2 | Seq Scan agg_station_od_monthly |
+| `d5_comuna_matrix` | 52,0 | 51,7–52,2 | 40,1 | 61,0 | 0 | 2 | Seq Scan agg_station_od_monthly |
+| `d6_station_drilldown` | 1,0 | 1,0–1,0 | 0,6 | 0 | 0 | 0 | Bitmap Heap Scan agg_station_od_monthly |
 
 <details><summary>Qué mide cada consulta</summary>
 
@@ -52,27 +52,22 @@
 
 ## Build de dbt (`dbt run`)
 
-Tiempo total de pared: **77,3 s** (los modelos corren en paralelo).
+Tiempo total de pared: **63,6 s** (los modelos corren en paralelo).
 
 | Modelo | Tiempo (s) |
 |---|--:|
-| `trips` | 30,5 |
-| `trips_rejected` | 27,5 |
-| `stations` | 20,5 |
-| `mart_q6_top_users` | 13,1 |
-| `fct_trips` | 7,7 |
-| `agg_station_od_monthly` | 7,2 |
-| `dim_user` | 4,4 |
-| `reconciliation` | 3,6 |
-| `mart_q5_duration_by_bike_model` | 3,5 |
-| `mart_q5_duration_by_model_and_distance` | 3,3 |
-| `mart_q3_trips_by_age_group` | 2,5 |
-| `users` | 2,2 |
-| `mart_q4_trips_by_signup_month` | 2,1 |
-| `dim_date` | 2,1 |
-| `mart_q3_age_correlation` | 2,0 |
-| `users_rejected` | 1,6 |
-| `mart_q2_comunas_destination` | 1,1 |
-| `mart_q1_comunas_origin` | 1,1 |
+| `trips` | 26,7 |
+| `trips_rejected` | 24,2 |
+| `stations` | 15,7 |
+| `mart_q6_top_users` | 11,5 |
+| `fct_trips` | 5,9 |
+| `agg_station_od_monthly` | 5,5 |
+| `mart_q5_duration_by_bike_model` | 2,7 |
+| `dim_user` | 2,6 |
+| `mart_q5_duration_by_model_and_distance` | 2,2 |
+| `mart_q3_age_correlation` | 1,4 |
+| `mart_q3_trips_by_age_group` | 1,3 |
+| `mart_q4_trips_by_signup_month` | 1,3 |
+| `users` | 1,2 |
 
 Se omiten los modelos de menos de 1 s.
