@@ -20,10 +20,10 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"**/tests/**" = ["S101"] # assert en tests
+"**/tests/**" = ["S101", "S105", "S106"] # assert y credenciales de prueba en tests
 
 [lint.isort]
-known-first-party = ["ingest", "profiling"]
+known-first-party = ["ingest", "profiling", "benchmark", "provision"]
 
 [format]
 quote-style = "double"
