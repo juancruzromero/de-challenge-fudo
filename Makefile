@@ -9,7 +9,7 @@ UV      := uv run --project etl
 export
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down reset ps logs psql etl dbt sql setup test lint profile
+.PHONY: help env up down reset ps logs psql etl dbt docs sql setup test lint profile
 
 help: ## Lista los comandos disponibles
 	@echo "Uso: make <comando>"
@@ -67,6 +67,11 @@ etl: env ## Corre el pipeline completo: ingesta a bronze + dbt build
 dbt: env ## Corre un comando de dbt (c="build --select silver", por defecto build)
 	$(call require_service,etl,T3.4)
 	$(COMPOSE) run --rm --build etl dbt $(or $(c),build)
+
+docs: env ## Genera y sirve la documentación de dbt en http://localhost:8080
+	$(call require_service,etl,T3.4)
+	$(COMPOSE) run --rm --build -p 8080:8080 etl \
+		sh -c "dbt docs generate && dbt docs serve --host 0.0.0.0 --port 8080 --no-browser"
 
 sql: env ## Corre las consultas de sql/analysis/ como bi_reader (q=q3 para una sola)
 	@ls sql/analysis/$(or $(q),)*.sql >/dev/null 2>&1 || { \

@@ -61,6 +61,7 @@ open http://localhost:3000
 | `make psql` | Consola SQL en la base analítica |
 | `make etl` · `make dbt` | Corre el pipeline / un comando de dbt |
 | `make sql` | Corre las 6 consultas de análisis (`make sql q=q3` para una sola) |
+| `make docs` | Documentación de dbt (modelos, columnas, tests y linaje) en http://localhost:8080 |
 | `make setup` · `make test` · `make lint` | Entorno local, tests y linters |
 | `make profile` | Regenera el reporte de profiling de los datasets |
 
@@ -110,4 +111,7 @@ El proyecto se desarrolla con **Spec-Driven Development**:
 - 🧭 [plan.md](specs/plan.md): stack, arquitectura y decisiones técnicas.
 - 📐 [spec.md](specs/spec.md): requerimientos, reglas de calidad de datos y criterios de aceptación.
 - ✅ [tasks.md](specs/tasks.md): tareas por fase y su estado.
+- 🗺️ [er-diagram.md](docs/er-diagram.md): modelo estrella y linaje de los datos.
+- 📖 [data-dictionary.md](docs/data-dictionary.md): cada columna, del archivo a silver, con sus reglas de limpieza.
+- 🧾 [docs/adr/](docs/adr/README.md): decisiones de datos (comunas, catálogo de estaciones, cobertura de usuarios).
 - 📝 [CHALLENGUE.md](CHALLENGUE.md): enunciado original.
