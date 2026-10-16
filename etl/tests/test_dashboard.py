@@ -41,7 +41,7 @@ def test_visualization_settings_reference_sql_columns():
         for key, value in card.settings.items():
             if key in ("graph.dimensions", "graph.metrics"):
                 columns += value
-            elif key.startswith(("map.", "sankey.")) and key != "map.type":
+            elif key.startswith("sankey.") or (key.startswith("map.") and key.endswith("_column")):
                 columns.append(value)
         for column in columns:
             assert f'as "{column}"' in card.sql, f"{card.name}: falta la columna {column}"

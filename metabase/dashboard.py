@@ -95,7 +95,7 @@ where {OD_WHERE}
         filtered=True,
     ),
     Card(
-        name="Recorridos origen-destino distintos",
+        name="Recorridos distintos",
         sql=f"""
 select count(distinct (origin_station_id, destination_station_id)) as "Recorridos"
 from gold.agg_station_od_monthly
@@ -109,7 +109,7 @@ where {OD_WHERE}
         filtered=True,
     ),
     Card(
-        name="Viajes dentro de la misma comuna (%)",
+        name="Dentro de la misma comuna",
         sql=f"""
 select
     round(
@@ -124,10 +124,12 @@ where {OD_WHERE}
         tab=TAB_TRIPS,
         pos=(3, 12),
         size=(6, 3),
+        description="Viajes que empiezan y terminan en la misma comuna.",
+        settings={"scalar.suffix": " %"},
         filtered=True,
     ),
     Card(
-        name="Viajes de ida y vuelta (%)",
+        name="Ida y vuelta",
         sql=f"""
 select
     round(100.0 * sum(trips) filter (where is_round_trip) / nullif(sum(trips), 0), 1)
@@ -162,7 +164,7 @@ order by year_month
         filtered=True,
     ),
     Card(
-        name="Top 20 recorridos entre estaciones",
+        name="Top 20 recorridos entre estaciones distintas",
         sql=f"""
 select
     origin_station_name as "Estación de origen",
@@ -173,7 +175,7 @@ select
     round(sum(trips * avg_duration_minutes) / sum(trips), 1) as "Duración media (min)",
     max(distance_m) as "Distancia (m)"
 from gold.agg_station_od_monthly
-where {OD_WHERE}
+where {OD_WHERE} and not is_round_trip
 group by
     origin_station_name,
     origin_comuna_label,
@@ -185,8 +187,11 @@ limit 20
         display="table",
         tab=TAB_TRIPS,
         pos=(12, 0),
-        size=(14, 10),
-        description="Distancia en línea recta entre las estaciones, no el recorrido real.",
+        size=(24, 9),
+        description=(
+            "Sin los viajes de ida y vuelta, que tienen su indicador. Distancia: en línea "
+            "recta entre las estaciones, no el recorrido real."
+        ),
         filtered=True,
     ),
     Card(
@@ -203,10 +208,12 @@ group by origin_station_name, origin_latitude, origin_longitude
 """,
         display="map",
         tab=TAB_TRIPS,
-        pos=(12, 14),
-        size=(10, 10),
+        pos=(21, 0),
+        size=(24, 11),
+        description="Cada punto es una estación; el detalle muestra cuántos viajes salen de ella.",
         settings={
             "map.type": "pin",
+            "map.pin_type": "tiles",
             "map.latitude_column": "Latitud",
             "map.longitude_column": "Longitud",
             "map.metric_column": "Viajes",
@@ -232,7 +239,7 @@ limit 40
 """,
         display="sankey",
         tab=TAB_TRIPS,
-        pos=(22, 0),
+        pos=(32, 0),
         size=(24, 12),
         description=(
             "Los 40 flujos entre comunas distintas con más viajes; los que quedan dentro de "
@@ -266,7 +273,7 @@ order by ranking
 """,
         display="row",
         tab=TAB_QUESTIONS,
-        pos=(3, 0),
+        pos=(9, 0),
         size=(12, 10),
         settings=bar(
             ["Comuna"],
@@ -287,7 +294,7 @@ order by ranking
 """,
         display="row",
         tab=TAB_QUESTIONS,
-        pos=(3, 12),
+        pos=(9, 12),
         size=(12, 10),
         settings=bar(
             ["Comuna"],
@@ -308,7 +315,7 @@ order by sort_order
 """,
         display="bar",
         tab=TAB_QUESTIONS,
-        pos=(13, 0),
+        pos=(19, 0),
         size=(15, 8),
         description=(
             "Solo usuarios con perfil (altas 2024 y 2025, ADR 003), incluidos los que no viajaron."
@@ -326,9 +333,8 @@ from gold.mart_q3_age_correlation
 """,
         display="table",
         tab=TAB_QUESTIONS,
-        pos=(13, 15),
-        size=(9, 8),
-        description="r cerca de 0: la edad casi no explica cuánto viaja alguien.",
+        pos=(19, 15),
+        size=(9, 4),
     ),
     Card(
         name="Q4 · Viajes cada 30 días según mes de alta",
@@ -342,7 +348,7 @@ order by signup_month
 """,
         display="combo",
         tab=TAB_QUESTIONS,
-        pos=(21, 0),
+        pos=(27, 0),
         size=(24, 8),
         description=(
             "Normalizado por los días de 2025 en que cada usuario ya estaba dado de alta, para "
@@ -375,7 +381,7 @@ order by bike_model
 """,
         display="table",
         tab=TAB_QUESTIONS,
-        pos=(29, 0),
+        pos=(35, 0),
         size=(24, 4),
     ),
     Card(
@@ -391,7 +397,7 @@ order by distance_band_order, bike_model
 """,
         display="bar",
         tab=TAB_QUESTIONS,
-        pos=(33, 0),
+        pos=(39, 0),
         size=(24, 7),
         description=(
             "Misma comparación dentro de cada tramo: aísla el efecto del modelo. Sin los 94 "
@@ -405,7 +411,7 @@ order by distance_band_order, bike_model
         sql="""
 select
     ranking as "Puesto",
-    user_id as "Usuario",
+    user_id::text as "Usuario",  -- texto: un ID no lleva separador de miles
     trips as "Viajes",
     total_hours as "Horas totales",
     active_days as "Días con viajes",
@@ -418,7 +424,7 @@ order by ranking
 """,
         display="table",
         tab=TAB_QUESTIONS,
-        pos=(40, 0),
+        pos=(46, 0),
         size=(24, 10),
         description="Top 100 por cantidad de viajes. Sin perfil: alta anterior a 2024 (ADR 003).",
     ),
@@ -443,6 +449,33 @@ TEXTS = (
         TAB_QUESTIONS,
         (0, 0),
         (24, 3),
+    ),
+    Text(
+        "### Hallazgos\n"
+        "- **Q1 y Q2 · Comunas:** Comuna 14 y Comuna 1 concentran un tercio de los viajes, como "
+        "origen (16,4 % cada una) y como destino. Casi la mitad de los viajes (48,6 %) empieza y "
+        "termina en la misma comuna.\n"
+        "- **Q3 · Edad:** la edad casi no explica cuánto viaja alguien (r = 0,03). Entre los "
+        "usuarios activos, los de 35 años o más hacen de 9,3 a 9,8 viajes; los menores de 35, "
+        "de 7,6 a 7,8.\n"
+        "- **Q4 · Fecha de alta:** las altas 2025 parecen más activas que las 2024 (73 % contra "
+        "25 % de usuarios activos), pero es un efecto de la ventana: solo hay viajes de 2025, así "
+        "que de las altas 2024 se ve su segundo año y de las 2025 su primer mes, cuando más se "
+        "viaja.\n"
+        "- **Q5 · Modelo:** FIT e ICONIC duran lo mismo: mediana de 16,1 y 16,3 min, y menos de "
+        "0,4 min de diferencia dentro de cada tramo de distancia.\n"
+        "- **Q6 · Usuarios:** el top 100 hace entre 437 y 1.137 viajes en el año. 75 no tienen "
+        "perfil: se dieron de alta antes de 2024 (ADR 003).",
+        TAB_QUESTIONS,
+        (3, 0),
+        (24, 6),
+    ),
+    Text(
+        "**Cómo leerlo:** r y R² cerca de 0. La edad explica menos del 0,2 % de la variación en "
+        "la cantidad de viajes. Es una correlación, no una relación causal.",
+        TAB_QUESTIONS,
+        (23, 15),
+        (9, 4),
     ),
 )
 
