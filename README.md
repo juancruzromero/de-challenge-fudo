@@ -39,7 +39,7 @@ data/raw/*.csv ──► 🥉 bronze ──► 🥈 silver ──► 🥇 gold �
 
 ## 🚀 Quickstart
 
-> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS), carga los datasets en bronze, arma silver y gold con dbt (limpieza, rechazos, modelo estrella, marts de Q1–Q6 y 146 tests de calidad) y deja Metabase configurado y conectado a gold. El dashboard llega en la próxima fase del [plan](specs/tasks.md).
+> 🚧 En construcción: `make up` ya levanta la base (PostgreSQL + PostGIS), carga los datasets en bronze, arma silver y gold con dbt (limpieza, rechazos, modelo estrella, marts de Q1–Q6 y 146 tests de calidad) y deja Metabase con el dashboard listo. Falta completar este README (fase 8 del [plan](specs/tasks.md)).
 
 **Requisitos:** Docker y Docker Compose. Para desarrollo local, además [uv](https://docs.astral.sh/uv/).
 
@@ -52,6 +52,17 @@ open http://localhost:3000
 ```
 
 Metabase queda configurado por código ([metabase/provision.py](metabase/provision.py)): el usuario es `MB_ADMIN_EMAIL` y la clave `MB_ADMIN_PASSWORD`, los dos en `.env`. La conexión usa `bi_reader`, que solo lee el schema `gold`.
+
+### 📊 Dashboard
+
+Es la página de inicio de Metabase. Sus preguntas son SQL nativo y están definidas en [metabase/dashboard.py](metabase/dashboard.py). Tiene dos pestañas:
+
+| Pestaña | Qué muestra |
+|---|---|
+| **Viajes entre estaciones** | Filtros por mes, comuna de origen y comuna de destino. Indicadores, viajes por mes, top 20 de recorridos, mapa de estaciones y flujos entre comunas (Sankey). Lee `gold.agg_station_od_monthly`. |
+| **Preguntas del challenge** | Q1–Q6, a partir de los marts de gold. |
+
+> ⚠️ El dashboard se regenera en cada `make up`: los cambios hechos a mano en Metabase se pisan. Para guardar una versión propia, duplicalo.
 
 `make help` lista todos los comandos:
 
