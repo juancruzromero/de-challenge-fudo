@@ -1,6 +1,5 @@
 # Stack local del challenge. Se levanta con `make up` (o `docker compose up -d`).
-# Las variables salen de .env (copiar .env.example). El servicio metabase-provision se agrega
-# en T7.1, cuando exista su imagen.
+# Las variables salen de .env (copiar .env.example).
 
 name: ecobici
 
@@ -96,6 +95,8 @@ services:
       MB_SITE_LOCALE: es
       MB_ANON_TRACKING_ENABLED: "false"
       MB_CHECK_FOR_UPDATES: "false"
+      # Sin la base y los dashboards de ejemplo: solo queda la conexión a Ecobici.
+      MB_LOAD_SAMPLE_CONTENT: "false"
     ports:
       - "${METABASE_PORT:-3000}:3000"
     healthcheck:
@@ -104,6 +105,33 @@ services:
       timeout: 5s
       retries: 30
       start_period: 60s
+
+  # One-shot: crea el admin y la conexión a la base analítica por API (metabase/provision.py).
+  # Solo usa la librería estándar de Python: misma imagen base que el ETL, sin build propio.
+  # Va en un perfil porque `up --wait` cuenta como falla a un one-shot que terminó antes que
+  # él: `make up` lo corre con `docker compose run` después del --wait (y make provision lo
+  # repite). Es idempotente.
+  metabase-provision:
+    image: python:3.12.15-slim-bookworm
+    profiles: ["provision"]
+    restart: "no"
+    depends_on:
+      metabase:
+        condition: service_healthy
+    environment:
+      MB_URL: http://metabase:3000
+      MB_PUBLIC_URL: http://localhost:${METABASE_PORT:-3000}
+      MB_ADMIN_EMAIL: ${MB_ADMIN_EMAIL:?definir en .env}
+      MB_ADMIN_PASSWORD: ${MB_ADMIN_PASSWORD:?definir en .env}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      BI_DB_USER: ${BI_DB_USER}
+      BI_DB_PASSWORD: ${BI_DB_PASSWORD}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./metabase:/app:ro
+    command: ["python", "-I", "/app/provision.py"]
 
 volumes:
   postgres-data:

@@ -9,7 +9,7 @@ UV      := uv run --project etl
 export
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down reset ps logs psql etl dbt docs sql setup test lint profile bench
+.PHONY: help env up down reset ps logs psql etl dbt docs provision sql setup test lint profile bench
 
 help: ## Lista los comandos disponibles
 	@echo "Uso: make <comando>"
@@ -27,8 +27,10 @@ env: ## Crea .env desde .env.example si no existe
 
 up: env ## Levanta todo el stack y espera a que esté healthy
 	$(COMPOSE) up -d --build --wait
+	@# La provisión de Metabase va aparte (perfil "provision" en docker-compose.yml).
+	$(COMPOSE) run --rm metabase-provision
 	@echo
-	@echo "Metabase:   http://localhost:$${METABASE_PORT:-3000}"
+	@echo "Metabase:   http://localhost:$${METABASE_PORT:-3000} (usuario $${MB_ADMIN_EMAIL}, clave en .env)"
 	@echo "PostgreSQL: localhost:$${POSTGRES_HOST_PORT:-5432} (make psql)"
 
 down: ## Detiene el stack (conserva los datos)
@@ -72,6 +74,9 @@ docs: env ## Genera y sirve la documentación de dbt en http://localhost:8080
 	$(call require_service,etl,T3.4)
 	$(COMPOSE) run --rm --build -p 8080:8080 etl \
 		sh -c "dbt docs generate && dbt docs serve --host 0.0.0.0 --port 8080 --no-browser"
+
+provision: env ## Vuelve a provisionar Metabase (admin y conexión a la base); idempotente
+	$(COMPOSE) run --rm metabase-provision
 
 sql: env ## Corre las consultas de sql/analysis/ como bi_reader (q=q3 para una sola)
 	@ls sql/analysis/$(or $(q),)*.sql >/dev/null 2>&1 || { \
