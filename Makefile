@@ -30,7 +30,9 @@ up: env ## Levanta todo el stack y espera a que esté healthy
 	@# La provisión de Metabase va aparte (perfil "provision" en docker-compose.yml).
 	$(COMPOSE) run --rm metabase-provision
 	@echo
-	@echo "Metabase:   http://localhost:$${METABASE_PORT:-3000} (usuario $${MB_ADMIN_EMAIL}, clave en .env)"
+	@# El usuario se lee de .env al imprimir: en la primera corrida, .env no existía cuando make
+	@# lo incluyó (lo crea el target env).
+	@echo "Metabase:   http://localhost:$${METABASE_PORT:-3000} (usuario $$(sed -n 's/^MB_ADMIN_EMAIL=//p' .env), clave en .env)"
 	@echo "PostgreSQL: localhost:$${POSTGRES_HOST_PORT:-5432} (make psql)"
 
 down: ## Detiene el stack (conserva los datos)
