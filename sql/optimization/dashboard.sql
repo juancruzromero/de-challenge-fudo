@@ -82,4 +82,4 @@ select
     trips
 from gold.agg_station_od_monthly
 where origin_station_id = 14
-order by month_start, trips desc;
+order by month_start asc, trips desc;
