@@ -198,6 +198,9 @@ El proyecto se desarrolló con **Spec-Driven Development**: primero el plan y la
 - 🧭 [plan.md](specs/plan.md): stack, arquitectura y decisiones técnicas.
 - 📐 [spec.md](specs/spec.md): requerimientos, reglas de calidad de datos y criterios de aceptación.
 - ✅ [tasks.md](specs/tasks.md): tareas por fase y su estado.
+
+**Documentación complementaria:**
+
 - 🗺️ [er-diagram.md](docs/er-diagram.md): modelo estrella y linaje de los datos.
 - 📖 [data-dictionary.md](docs/data-dictionary.md): cada columna, del archivo a silver, con sus reglas de limpieza.
 - 🧾 [docs/adr/](docs/adr/README.md): decisiones de datos (comunas, catálogo de estaciones, cobertura de usuarios).
