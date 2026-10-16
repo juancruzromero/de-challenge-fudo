@@ -1,0 +1,166 @@
+version: 2
+
+# Gold: modelo estrella y marts que consume Metabase (bi_reader solo lee este schema).
+
+models:
+  - name: dim_comuna
+    description: Comunas de la Ciudad con su polígono (ADR 001).
+    columns:
+      - name: comuna
+        description: Número de comuna (1 a 15).
+        data_tests:
+          - unique
+          - not_null
+      - name: comuna_label
+        description: Etiqueta para mostrar ("Comuna 14").
+        data_tests:
+          - not_null
+      - name: barrios
+        description: Barrios de la comuna (descriptivo).
+      - name: area_km2
+        description: Superficie en km².
+      - name: perimeter_m
+        description: Perímetro en metros.
+      - name: geom
+        description: Polígono (MultiPolygon, SRID 4326).
+
+  - name: dim_station
+    description: Estaciones con su comuna (ADR 001 y 002).
+    columns:
+      - name: station_id
+        description: ID de la estación.
+        data_tests:
+          - unique
+          - not_null
+      - name: station_number
+        description: Número público de la estación (no es clave).
+      - name: station_name
+        description: Nombre de la estación.
+        data_tests:
+          - not_null
+      - name: address
+        description: Dirección.
+      - name: latitude
+        description: Latitud WGS84.
+      - name: longitude
+        description: Longitud WGS84.
+      - name: geom
+        description: Punto PostGIS (SRID 4326).
+      - name: comuna
+        description: Comuna; NULL para la estación sin ubicación (510).
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_comuna')
+                field: comuna
+      - name: comuna_label
+        description: Etiqueta de la comuna, o "Sin ubicación".
+        data_tests:
+          - not_null
+      - name: comuna_assignment
+        description: contains, nearest o unknown.
+      - name: source
+        description: catalog o trips.
+
+  - name: dim_user
+    description: >
+      Usuarios que viajaron en 2025 y usuarios de los archivos de alta 2024 y 2025 aunque no
+      hayan viajado (ADR 003). has_profile distingue a los que tienen edad y fecha de alta.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            # Con perfil <=> tiene fecha de alta.
+            expression: "has_profile = (signed_up_at is not null)"
+    columns:
+      - name: user_id
+        description: ID del usuario.
+        data_tests:
+          - unique
+          - not_null
+      - name: has_profile
+        description: >
+          true si está en los archivos de usuarios (altas 2024-2025); false si es un alta
+          anterior a 2024 que solo aparece en los viajes.
+        data_tests:
+          - not_null
+      - name: gender
+        description: Género del perfil o, si no tiene perfil, el más frecuente en sus viajes.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [MALE, FEMALE, OTHER]
+      - name: gender_source
+        description: profile o trips (de dónde salió el género); NULL si no hay dato.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [profile, trips]
+      - name: age
+        description: Edad al alta (15 a 100); NULL sin perfil o con edad inválida.
+      - name: age_group
+        description: Rango etario para agrupar, o "Sin dato".
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['15-24', '25-34', '35-44', '45-54', '55-64', '65+', Sin dato]
+      - name: signed_up_at
+        description: Fecha y hora de alta (solo con perfil).
+      - name: signup_date
+        description: Fecha de alta.
+      - name: signup_year
+        description: Año de alta (2024 o 2025).
+      - name: signup_month
+        description: Primer día del mes de alta (cohorte para Q4).
+      - name: has_dni
+        description: Si registró DNI (solo altas 2025).
+
+  - name: dim_bike_model
+    description: Modelos de bicicleta.
+    columns:
+      - name: bike_model_id
+        description: Clave numérica del modelo.
+        data_tests:
+          - unique
+          - not_null
+      - name: bike_model
+        description: FIT o ICONIC.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: >
+      Calendario diario desde la primera alta (2024) hasta el último fin de viaje (2026).
+    data_tests:
+      - dbt_utils.sequential_values:
+          arguments:
+            column_name: date_day
+            interval: 1
+            datepart: day
+    columns:
+      - name: date_day
+        description: Día.
+        data_tests:
+          - unique
+          - not_null
+      - name: year
+        description: Año.
+      - name: quarter
+        description: Trimestre (1 a 4).
+      - name: month
+        description: Mes (1 a 12).
+      - name: month_name
+        description: Nombre del mes en español.
+      - name: year_month
+        description: Año y mes, YYYY-MM.
+      - name: month_start
+        description: Primer día del mes.
+      - name: day_of_month
+        description: Día del mes.
+      - name: day_of_week
+        description: Día de la semana ISO (1 = lunes, 7 = domingo).
+      - name: day_name
+        description: Nombre del día en español.
+      - name: is_weekend
+        description: Sábado o domingo.

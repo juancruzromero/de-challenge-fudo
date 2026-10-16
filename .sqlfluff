@@ -34,5 +34,5 @@ aliasing = explicit
 aliasing = explicit
 
 [sqlfluff:rules:references.keywords]
-# `source` no es palabra reservada en Postgres y es el nombre natural de esa columna.
-ignore_words = source
+# No son palabras reservadas en Postgres y son los nombres naturales de esas columnas.
+ignore_words = source, year, quarter, month, year_month

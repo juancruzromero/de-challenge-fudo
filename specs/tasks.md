@@ -77,7 +77,7 @@
   - Commit: `test(dbt): add silver data quality tests`
 
 ## Fase 5 — Gold (dbt) + análisis
-- [ ] **T5.1** Dimensiones: `dim_station`, `dim_comuna`, `dim_user` (todos los usuarios de los viajes + `has_profile`), `dim_bike_model`, `dim_date`. (FR-09)
+- [~] **T5.1** Dimensiones: `dim_station` (413), `dim_comuna` (15), `dim_user` (487.262: usuarios de los viajes + de los archivos de alta, con `has_profile`), `dim_bike_model` (2), `dim_date` (732 días). (FR-09)
   - Commit: `feat(dbt): add gold dimensions`
 - [ ] **T5.2** `fct_trips` + tests de relaciones.
   - Commit: `feat(dbt): add trips fact table`

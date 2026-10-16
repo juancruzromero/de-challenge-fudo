@@ -83,11 +83,11 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 
 ### Modelo analítico (gold)
 - **FR-09** Modelo estrella. Desde silver, las columnas van en inglés snake_case (ver [diccionario de datos](../docs/data-dictionary.md)):
-  - `dim_station` (station_id, station_number, station_name, address, latitude, longitude, geom, comuna, comuna_assignment, source)
-  - `dim_comuna` (comuna, barrios, perimeter_m, area_m2, geom)
-  - `dim_user` (user_id, has_profile, gender, age, age_group, signed_up_at, signup_year, signup_month, has_dni). Incluye **todos** los usuarios que aparecen en los viajes. Para los que no están en ninguno de los archivos de usuarios, `has_profile = false`, la edad y la fecha de alta quedan NULL y el género se toma del más frecuente en sus viajes.
+  - `dim_station` (station_id, station_number, station_name, address, latitude, longitude, geom, comuna, comuna_label, comuna_assignment, source). `comuna_label` es "Sin ubicación" para la estación 510
+  - `dim_comuna` (comuna, comuna_label, barrios, area_km2, perimeter_m, geom)
+  - `dim_user` (user_id, has_profile, gender, gender_source, age, age_group, signed_up_at, signup_date, signup_year, signup_month, has_dni). Incluye a **todos** los usuarios con viajes válidos en 2025 **y** a todos los de los archivos de alta 2024 y 2025, aunque no hayan viajado (Q4 necesita esos ceros por cohorte): 487.262 usuarios. Sin perfil (altas anteriores a 2024): `has_profile = false`, edad y fecha de alta en NULL y el género es el más frecuente en sus viajes (`gender_source = 'trips'`).
   - `dim_bike_model` (bike_model_id, bike_model)
-  - `dim_date` (date, day_of_week, month, quarter, is_weekend, is_holiday opcional)
+  - `dim_date` (date_day, year, quarter, month, month_name, year_month, month_start, day_of_month, day_of_week, day_name, is_weekend), de la primera alta (2024-01-01) al último fin de viaje. Sin feriados: se pueden sumar como seed desde una fuente oficial
   - `fct_trips` (trip_id, started_at, ended_at, origin_station_id, destination_station_id, user_id, bike_model_id, duration_seconds, is_round_trip)
 - **FR-10** `agg_station_od_monthly`: viajes y duración media por par origen→destino y mes.
 - **FR-11** Marts / consultas para cada pregunta del challenge:
