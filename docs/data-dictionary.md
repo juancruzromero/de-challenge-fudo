@@ -27,7 +27,9 @@ Cada columna de cada archivo de entrada: cómo se llama en el origen, en **bronz
 
 ## 🚲 Viajes 2025
 
-`data/raw/ecobici-datasets-2025.csv` → `bronze.trips` → `silver.trips`. 3.156.182 filas, 1 por viaje.
+`data/raw/ecobici-datasets-2025.csv` → `bronze.trips` → `silver.trips`. 3.156.182 filas, 1 por viaje: **3.155.783 válidos** en `silver.trips` y **399 rechazados** en `silver.trips_rejected` (398 `duration_over_24h` y 1 `missing_station`). Las reglas se evalúan en el orden de la tabla y el rechazo informa la primera que falla.
+
+En 8 viajes `ended_at` es igual a `started_at` aunque la duración es de varios minutos: se conservan, la duración informada es la medida de referencia, y un test de nivel warn los deja visibles.
 
 | Origen | Bronze | Silver | Tipo silver | Ejemplo | Regla |
 |---|---|---|---|---|---|

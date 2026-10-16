@@ -68,10 +68,10 @@
 - [x] **T4.2** Silver de comunas (`ST_GeomFromGeoJSON`, índice GiST) y de estaciones: catálogo actual + 6 estaciones derivadas de viajes, comuna por `ST_Contains` con respaldo por cercanía. (FR-05, FR-05b, FR-05c)
   - Aceptación: 413 estaciones (407 + 6); todas con comuna salvo la 510 sin ubicación (`unknown`); AEROPARQUE con `comuna_assignment = 'nearest'` y comuna 14 (ADR 001); toda estación de los viajes existe en silver.
   - Commit: `feat(dbt): add silver comunas and stations with spatial join`
-- [~] **T4.3** Silver de usuarios: unión de `users_2024` y `users_2025` con esquema común (FR-01c), rejected, edad inválida → NULL, `fecha_alta` + `hora_alta` → timestamp.
+- [x] **T4.3** Silver de usuarios: unión de `users_2024` y `users_2025` con esquema común (FR-01c), rejected, edad inválida → NULL, `fecha_alta` + `hora_alta` → timestamp.
   - Aceptación: 389.751 usuarios (197.077 + 192.674), `signup_year` en {2024, 2025}.
   - Commit: `feat(dbt): add silver users`
-- [ ] **T4.4** Silver de viajes con reglas FR-07 y rejected (FR-08).
+- [~] **T4.4** Silver de viajes con reglas FR-07 y rejected (FR-08): 3.155.783 válidos + 399 rechazados; test warn para los 8 viajes con fin = inicio.
   - Commit: `feat(dbt): add silver trips with quality rules`
 - [ ] **T4.5** Tests dbt de silver + test de reconciliación bronze = silver + rejected.
   - Commit: `test(dbt): add silver data quality tests`

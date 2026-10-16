@@ -72,6 +72,7 @@ Perfilados sobre los archivos completos con `uv run --project etl ecobici-profil
 | Viaje | sin ID de estación de origen o destino | rechazado (`missing_station`) | 1 |
 | Viaje | sin nombre o coordenadas de estación | se conserva; los atributos salen de `dim_station` | 18 orígenes / 29 destinos |
 | Viaje | coordenadas de estación en 0 (fuera de CABA) | se conserva; los atributos salen de `dim_station`. Son todos de la estación 510 "[Valet] Galpón", que queda sin comuna (FR-05) | 176 destinos |
+| Viaje | fecha de destino igual a la de origen con duración > 0 (la duración no coincide con fin − inicio) | se conserva; la duración informada es la medida de referencia. Test de nivel warn | 8 |
 | Viaje | misma estación de origen y destino | se conserva con `is_round_trip = true` | 275.733 |
 | Viaje | género vacío | género = NULL | 8.601 |
 | Usuario | edad no numérica o fuera de [15, 100] | edad = NULL (el usuario se conserva) | 2025: 100 (5 menores de 15, 95 mayores de 100, de los cuales 17 con separador de miles) · 2024: 76 (6 + 70) |

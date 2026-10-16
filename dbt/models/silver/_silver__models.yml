@@ -168,3 +168,115 @@ models:
         description: Archivo de origen.
       - name: source_row_number
         description: Fila en el archivo de origen (bronze._row_number).
+
+  - name: trips
+    description: >
+      Viajes de 2025 que pasan todas las reglas de calidad de FR-07. Los atributos de las
+      estaciones se toman de stations; los del usuario, de users (cuando tiene perfil).
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "extract(year from started_at) = {{ var('analysis_year') }}"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "ended_at >= started_at"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "is_round_trip = (origin_station_id = destination_station_id)"
+      # La duración informada coincide con fin - inicio salvo en 8 viajes, cuyo fin quedó igual al
+      # inicio. Se conservan (la duración es la medida del sistema) y se avisan sin frenar.
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "abs(duration_seconds - extract(epoch from ended_at - started_at)) <= 60"
+          config:
+            severity: warn
+    columns:
+      - name: trip_id
+        description: ID del viaje (sin el sufijo BAEcobici).
+        data_tests:
+          - unique
+          - not_null
+      - name: started_at
+        description: Inicio del viaje (hora local de Buenos Aires).
+        data_tests:
+          - not_null
+      - name: ended_at
+        description: Fin del viaje; puede caer en 2026 si el viaje cruzó el fin de año.
+        data_tests:
+          - not_null
+      - name: duration_seconds
+        description: Duración informada por el sistema, en segundos (1 a 86.400).
+        data_tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 86400
+      - name: origin_station_id
+        description: Estación de origen.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stations')
+                field: station_id
+      - name: destination_station_id
+        description: Estación de destino.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stations')
+                field: station_id
+      - name: user_id
+        description: >
+          Usuario que hizo el viaje. El 51 % no está en users (altas anteriores a 2024,
+          ADR 003), así que no hay test de relación acá; dim_user sí incluye a todos.
+        data_tests:
+          - not_null
+      - name: bike_model
+        description: Modelo de bicicleta.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [FIT, ICONIC]
+      - name: gender
+        description: Género informado en el viaje (MALE, FEMALE, OTHER); NULL si vino vacío.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [MALE, FEMALE, OTHER]
+      - name: is_round_trip
+        description: El viaje termina en la misma estación donde empezó.
+        data_tests:
+          - not_null
+
+  - name: trips_rejected
+    description: >
+      Filas del archivo de viajes descartadas (FR-08), con el motivo y la fila de origen en
+      bronze.
+    columns:
+      - name: reject_reason
+        description: Primera regla de FR-07 que no se cumple.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - invalid_trip_id
+                  - duplicate_trip_id
+                  - invalid_timestamp
+                  - out_of_period
+                  - destination_before_origin
+                  - missing_station
+                  - unknown_station
+                  - invalid_duration
+                  - non_positive_duration
+                  - duration_over_24h
+                  - invalid_user_id
+                  - invalid_bike_model
+      - name: source_file
+        description: Archivo de origen.
+      - name: source_row_number
+        description: Fila en el archivo de origen (bronze._row_number).
